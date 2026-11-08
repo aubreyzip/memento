@@ -10,7 +10,8 @@ flowchart TB
       Ports[Repository and Service Interfaces]
     end
     subgraph INFRA[Infrastructure]
-      Repos[SQLite Repositories]
+      Repos[Plain-SQL Repositories / expo-sqlite]
+      Boot[DB Bootstrap: cipher check, key states, quarantine]
       DB[(SQLCipher SQLite)]
       Media[Attachment Storage]
       Secure[SecureStore / Key Management]
@@ -27,8 +28,10 @@ flowchart TB
     Repos --> DB
     UseCases --> Media
     UseCases --> Backup
+    UseCases --> Notify
     Backup --> DB
     Backup --> Media
-    Secure --> DB
+    Secure --> Boot
+    Boot --> DB
     Media --> OS
     Notify --> OS

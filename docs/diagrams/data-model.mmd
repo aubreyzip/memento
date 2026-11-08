@@ -22,6 +22,7 @@ erDiagram
       text collection_type_id FK
       text name
       text description
+      integer sort_order
       text created_at
       text archived_at
     }
@@ -29,6 +30,7 @@ erDiagram
       text id PK
       text key
       text name
+      text color
       text template_key
       boolean is_system
       boolean is_active
@@ -43,11 +45,14 @@ erDiagram
       text priority
       text date_start
       text date_end
+      text starts_at_utc
+      text ends_at_utc
       integer price_minor
       text currency_code
       text location_text
       boolean is_pinned
       text archived_at
+      text completed_at
     }
     ENTRY_LINKS {
       text id PK

@@ -66,7 +66,8 @@ There is no remote account actor, administrator role, or second collaborator in 
 | FR-023 | Categories MUST be reusable across collections in V1. | Must |
 | FR-024 | A category MUST define the applicable status behavior and relevant optional fields through its template. | Must |
 | FR-025 | System categories MUST NOT be permanently deleted. Custom categories in use MUST be archived or reassigned before deletion. | Must |
-| FR-026 | The app MUST seed built-in collection types and categories idempotently so upgrades do not duplicate them. | Must |
+| FR-027 | Built-in collection types and categories MAY be reordered and archived (hidden) but MUST NOT be renamed or deleted; icon and color overrides are optional (O-041). | Must (no rename/delete); Could (overrides) |
+| FR-026 | The app MUST seed built-in collection types and categories idempotently so upgrades do not duplicate them. Built-in rows MUST use permanent IDs from the reserved built-in namespace; user-created rows MUST NOT use IDs in that namespace (O-020). | Must |
 
 ### 4.4 Quick Capture Inbox
 
@@ -88,8 +89,8 @@ There is no remote account actor, administrator role, or second collaborator in 
 | FR-042 | An assigned entry MUST belong to exactly one collection and one category. | Must |
 | FR-043 | An unsorted Inbox entry MUST have neither a collection nor a category. Partial assignment MUST be rejected. | Must |
 | FR-044 | An entry MAY have a priority of Low, Medium, or High. | Must |
-| FR-045 | An entry MAY have category-appropriate status values. | Must |
-| FR-046 | A Note or Preference entry MUST NOT require a status. | Must |
+| FR-045 | Task, Wishlist, and Event entries use the status values of their category's template (§4.6). Whether status is required for these templates, its default value, and its behavior when an entry changes template or returns to the Inbox are pending decision O-021 in `DECISIONS.md`. | Must |
+| FR-046 | Note and Preference entries, and unsorted Inbox entries, MUST have no status. | Must |
 | FR-047 | The user MUST be able to pin/unpin entries. | Must |
 | FR-048 | The user MUST be able to add, remove, and reorder multiple links on an entry. | Must |
 | FR-049 | The user MUST be able to attach and remove multiple photos/images on an entry. | Must |
@@ -120,7 +121,7 @@ The app MUST validate status values against the selected category template. Stat
 | FR-070 | Home MUST show useful summaries of upcoming dated items, pending tasks, pinned entries, and recent entries. | Must |
 | FR-071 | Home MUST provide a Quick Add action. | Must |
 | FR-072 | The user MUST be able to search across assigned and Inbox entries. | Must |
-| FR-073 | Search MUST support title and description matching; tag matching SHOULD be supported. | Must/Should |
+| FR-073 | Search MUST support title and description matching. Search SHOULD also support tag matching. Text normalization for English and Turkish (case and diacritic folding) is pending decision O-026. | Must (title/description); Should (tags) |
 | FR-074 | The user MUST be able to filter results by collection, category, status, priority, tags, and archived state where relevant. | Must |
 | FR-075 | The user MUST be able to sort results by recently updated, recently created, title, and relevant date where available. | Must |
 | FR-076 | Empty states MUST explain what the user can do next. | Must |
@@ -129,7 +130,7 @@ The app MUST validate status values against the selected category template. Stat
 
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-080 | The user SHOULD be able to create a local reminder associated with an entry. | Should |
+| FR-080 | The user MUST be able to create a local reminder associated with an entry. Reminder lifecycle rules (count per entry, fired reminders, recurrence, archive behavior) are pending decisions O-024, O-025, and O-032. | Must |
 | FR-081 | A reminder MUST be scheduled by the operating system locally; no push service or backend is required. | Must |
 | FR-082 | The app MUST handle notification permission denial gracefully and keep reminder data visible in the app. | Must |
 | FR-083 | The app MUST reconcile scheduled notifications with stored reminder records after restart or relevant schedule changes. | Must |
@@ -141,7 +142,7 @@ The app MUST validate status values against the selected category template. Stat
 |---|---|---|
 | FR-090 | The app MUST provide optional biometric app locking on supported devices. | Must |
 | FR-091 | The app MUST offer a device-credential fallback where supported, or clearly explain when biometric authentication is unavailable. | Must |
-| FR-092 | The app MUST allow manual lock and a configurable auto-lock behavior. | Should |
+| FR-092 | When app lock is enabled, the app MUST allow manual lock and SHOULD offer configurable auto-lock behavior (options pending decision O-013). | Must (manual lock); Should (auto-lock) |
 | FR-093 | Encryption keys MUST NOT be hardcoded or logged. | Must |
 | FR-094 | The app MUST verify SQLCipher availability in production-style builds before opening the encrypted database. | Must |
 
@@ -150,7 +151,7 @@ The app MUST validate status values against the selected category template. Stat
 | ID | Requirement | Priority |
 |---|---|---|
 | FR-100 | The user MUST be able to create a full manual backup containing all collections, custom types/categories, entries, tags, reminders, and attachments. | Must |
-| FR-101 | The user SHOULD be able to export one selected collection with its associated content and attachments. | Should |
+| FR-101 | The user MUST be able to export one selected collection with its associated content and attachments. | Must |
 | FR-102 | Backup files MUST use a versioned manifest so future releases can validate and migrate older backup schemas. | Must |
 | FR-103 | Backup encryption MUST use a vetted cryptographic implementation; custom cryptography is prohibited. | Must |
 | FR-104 | The user MUST be able to import a backup and review a summary before committing it. | Must |
@@ -199,6 +200,8 @@ The app MUST validate status values against the selected category template. Stat
 | NFR-034 | Logs MUST NOT include personal entry content, encryption keys, passphrases, or sensitive local file paths. |
 | NFR-035 | The app MUST request only permissions needed for a user-initiated feature. |
 | NFR-036 | V1 MUST NOT include advertising SDKs or third-party analytics. |
+| NFR-037 | Memento's private app data (database, attachments, keys, settings, staging files) MUST be excluded from automatic OS device backups and device-to-device transfers on Android and iOS. Memento's manual backup is the supported backup mechanism (O-018). |
+| NFR-038 | If a database file exists but its key is missing or does not open it, the app MUST NOT delete, overwrite, or recreate it automatically. It MUST quarantine the file and offer restore from a Memento backup or a confirmed fresh start (O-019). |
 
 ### 5.5 Usability and accessibility
 
@@ -241,6 +244,8 @@ A release candidate is acceptable only when the applicable requirements in this 
 
 | Requirement area | Primary source |
 |---|---|
+| Decisions and their status | `DECISIONS.md` |
+| Pre-Phase 1 review findings | `DOCUMENTATION_REVIEW.md` |
 | Product goals and scope | `PRD.md` |
 | User interactions | `USE_CASES.md` |
 | Architecture | `SDD.md` |

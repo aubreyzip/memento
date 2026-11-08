@@ -15,7 +15,8 @@
 - [ ] Onboarding accurately explains local-first behavior and backup responsibility.
 - [ ] App name, public store title, icon, and logo are finalized.
 - [ ] Store name and trademark availability have been checked.
-- [ ] Android application ID and iOS bundle identifier are selected and checked.
+- [x] Android application ID and iOS bundle identifier are selected: `com.aubreyzip.memento` (O-001, 8 Nov 2026).
+- [ ] The identifier is registered in the Apple Developer account and claimed by the first Google Play upload; release builds use it and no spike build does.
 - [ ] Versioning and release notes are prepared.
 
 ## 2. Security and data integrity
@@ -35,6 +36,8 @@
 - [ ] Collection export/import behaves as documented.
 - [ ] Permanent deletion removes local database data and associated files/notifications.
 - [ ] Logs and diagnostics do not contain user content or secrets.
+- [ ] OS backup and device-transfer exclusion is present in the release binaries and verified on both platforms (O-018, SDD §12.4).
+- [ ] Unreadable-database recovery (quarantine and recovery screen) is verified for the missing-key and wrong-key states (O-019).
 
 ## 3. Functional and platform QA
 

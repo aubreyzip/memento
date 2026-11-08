@@ -58,7 +58,7 @@ Built-in keys: `PERSON`, `SPACE`, `PROJECT`, `EVENT`, `GENERAL`.
 | Column | Type | Rules / meaning |
 |---|---|---|
 | `id` | TEXT | Primary key, UUID. |
-| `collection_type_id` | TEXT | Required FK to `collection_types.id`. |
+| `collection_type_id` | TEXT | Required FK to `collection_types.id`, `ON DELETE RESTRICT`. A type in use cannot be deleted (SRS FR-015). |
 | `name` | TEXT | Required, trimmed, non-empty. |
 | `description` | TEXT | Nullable. |
 | `icon_override` | TEXT | Nullable. |
@@ -111,7 +111,7 @@ The primary information record.
 | `category_id` | TEXT | Nullable FK to `categories.id`; null only for Inbox. |
 | `title` | TEXT | Required, trimmed, non-empty. |
 | `description` | TEXT | Nullable. |
-| `status` | TEXT | Nullable; validated against category template. |
+| `status` | TEXT | Nullable; validated against category template. NULL for NOTE/PREFERENCE templates and Inbox entries. Required-ness and defaults for status-bearing templates are pending O-021. |
 | `priority` | TEXT | Nullable; `LOW`, `MEDIUM`, `HIGH`. |
 | `date_start` | TEXT | Nullable ISO `YYYY-MM-DD`; semantics are template-specific (due/event/target date). |
 | `date_end` | TEXT | Nullable ISO `YYYY-MM-DD`; for ranges where applicable; must not precede `date_start`. |
@@ -251,6 +251,10 @@ CREATE TABLE entries (
 
 Seed built-in collection types and categories using deterministic IDs or stable keys. Seeding must be idempotent and migration-safe. User-created types/categories must never be overwritten by a seed update.
 
+**Confirmed decision O-020:** every built-in row has a **permanent ID** from a reserved built-in namespace as well as its unique `key`. Backups and collection imports from another device reference built-in rows directly by ID. User-created types and categories use random v4 UUIDs, and no user-created or imported custom row may use an ID inside the reserved namespace.
+
+**Format (Confirmed O-038):** RFC 9562 version-8 UUIDs with prefix `4d454d30` ("MEM0"), for example `4d454d30-0000-8000-8000-000000000001` (collection type) and `4d454d30-0000-8000-8001-000000000001` (category). A v4 UUID cannot fall in this namespace because its version digit is 4.
+
 System category display names must be localized from translation resources, not persisted as translated database values. Custom category names are user data and remain unchanged when language changes.
 
 ## 6. Deletion and lifecycle rules
@@ -262,6 +266,8 @@ System category display names must be localized from translation resources, not 
 - Custom types/categories in use must be archived or reassigned before deletion.
 - Remove orphaned tags according to a tested cleanup policy.
 - Do not silently delete attachment files before the database transaction outcome is known; use staged cleanup where needed.
+- `ON DELETE CASCADE` removes child **rows** only. It cannot delete attachment files or cancel OS notifications. Before deleting an entry or a collection, the application service must collect the affected attachment paths and notification identifiers. After the transaction commits, it removes those files and cancels those notifications. Orphan cleanup is the safety net.
+- Archive semantics across collections, entries, categories, and types, and the single "archive" mechanism, are pending decision O-025.
 
 ## 7. Date and money conventions
 
@@ -288,6 +294,15 @@ System category display names must be localized from translation resources, not 
 - Backups carry a separate export-format version; database schema version and backup format version are not interchangeable.
 - A migration must preserve user-created content and system seed integrity.
 - Test SQLCipher behavior during migration on actual custom native builds.
+- **Table rebuilds must not cascade-delete data.** SQLite cannot alter `CHECK` constraints or foreign keys in place, so such changes need a table rebuild. `PRAGMA foreign_keys` has no effect inside a transaction. With foreign keys enforced, `DROP TABLE entries` performs an implicit delete that fires `ON DELETE CASCADE` on links, attachments, tag links, and reminders. Follow SQLite's documented procedure for generalized `ALTER TABLE` changes:
+  1. Turn foreign keys off **outside** the transaction.
+  2. Inside the transaction: create the new table, copy the rows, drop the old table, rename the new one, and recreate indexes and triggers.
+  3. Run `PRAGMA foreign_key_check` before committing.
+  4. Turn foreign keys back on.
+
+  Every rebuild migration needs a test proving that child rows survive.
+- Data access uses hand-written, numbered SQL migration files applied in order and tracked with `PRAGMA user_version`, each in its own transaction (Confirmed O-016). The Phase 0 Node harness demonstrates the runner, rollback on failure, and the FK-safe rebuild (`PHASE_0_REPORT.md` §4.1; code in `experiments/phase-0/node-harness/`).
+- A migration is "released", and therefore frozen, once any build containing it has stored data the owner wants to keep, including the owner's long-lived test installs (Confirmed O-040).
 
 ## 9. Backup inclusion matrix
 

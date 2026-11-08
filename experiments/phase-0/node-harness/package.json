@@ -1,0 +1,14 @@
+{
+  "name": "memento-phase0-node-harness",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Phase 0 spike: run plain-SQL migrations in Node (O-016/O-017 evidence). Not production code.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "hash-wasm": "4.13.0",
+    "sql.js": "1.15.2"
+  }
+}

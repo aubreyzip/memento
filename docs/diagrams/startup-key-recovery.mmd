@@ -1,0 +1,16 @@
+flowchart TD
+    Start([App start]) --> Cipher{PRAGMA cipher_version<br/>returns a row?}
+    Cipher -- No --> FailClosed[Fail closed: diagnostic error,<br/>no database is opened or created]
+    Cipher -- Yes --> HasFile{Database file exists?}
+    HasFile -- No --> HasKey1{Key in SecureStore?}
+    HasKey1 -- No --> Create[State A: generate 256-bit key,<br/>store THIS_DEVICE_ONLY,<br/>create + key DB, migrate, seed]
+    HasKey1 -- Yes --> Create2[State E: create + key new DB<br/>with existing or new key]
+    HasFile -- Yes --> HasKey2{Key in SecureStore?}
+    HasKey2 -- No --> Quarantine
+    HasKey2 -- Yes --> Probe{Key DB, first read succeeds?}
+    Probe -- Yes --> Normal[State B: migrate if needed, open Home]
+    Probe -- No: wrong key --> Quarantine[States C/D: close connections,<br/>move DB + -wal/-shm/-journal<br/>to .quarantine-timestamp]
+    Quarantine --> Recovery[Recovery screen]
+    Recovery -- Restore from a Memento backup --> Import[UC-15 import into a new database]
+    Recovery -- Start fresh --> Fresh[Create new empty database;<br/>quarantined file kept]
+    Fresh -. separate explicit confirmation .-> Purge[Delete quarantined file]

@@ -250,6 +250,7 @@ Memento stores personal notes about people and places. The product must:
 - Never transmit user-created entry content to a service.
 - Provide full data export and permanent deletion.
 - Explain the consequences of losing an unbacked-up device.
+- Explain that Memento's data is deliberately excluded from automatic phone backups and phone-to-phone transfers, so moving to a new phone requires a Memento backup (O-018). Users may keep exported backup files wherever they like, including cloud storage.
 - Encourage users not to save passwords, financial credentials, or highly sensitive personal data, and to record information respectfully.
 
 Local storage does not remove the user's privacy responsibilities or guarantee that a device backup is encrypted. The privacy policy and store disclosures must accurately describe actual implementation and platform behavior.

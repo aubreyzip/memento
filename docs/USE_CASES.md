@@ -61,6 +61,11 @@ See [`diagrams/use-case-overview.mmd`](./diagrams/use-case-overview.mmd).
 **Alternatives / exceptions:**
 - If the device locale is unsupported, default to English and allow a change in Settings.
 - If database initialization or required encryption verification fails, do not silently create an unencrypted database; show a recoverable error.
+- If a database file exists but its key is missing or does not open it (for example, after an OS-level device restore or a device transfer), do not delete or recreate the database automatically (O-019, SDD §8.1.1):
+  1. App moves the unreadable database aside to a quarantine name.
+  2. App explains that the existing data cannot be opened on this device.
+  3. User chooses **Restore from a Memento backup** (continues with UC-15) or **Start fresh** (creates a new empty database).
+  4. The quarantined file is kept unless the user separately confirms its deletion.
 
 **Postconditions:** Local settings and seeded system data exist; no account is created.
 
@@ -229,7 +234,7 @@ See [`diagrams/use-case-overview.mmd`](./diagrams/use-case-overview.mmd).
 1. User opens Settings → Backup & Restore.
 2. User chooses Full Backup or Export Collection.
 3. App prepares a consistent snapshot of the selected data and attachments.
-4. User sets/enters a backup passphrase if required by the validated format.
+4. User sets/enters a backup passphrase. SRS NFR-033 requires encrypted backups; whether an unencrypted export is ever allowed, and the passphrase rules, are pending decision O-028.
 5. App creates a versioned encrypted archive and opens the OS share/save interface.
 6. App reports success only after the file has been written successfully.
 

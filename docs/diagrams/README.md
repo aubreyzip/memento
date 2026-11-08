@@ -8,3 +8,4 @@ The `.mmd` files are Mermaid source and can be previewed in GitHub, VS Code exte
 - `data-model.mmd` — entity relationships.
 - `quick-capture-flow.mmd` — unsorted and assigned entry flow.
 - `backup-restore-flow.mmd` — safe export and import workflow.
+- `startup-key-recovery.mmd` — startup key-state handling and unreadable-database recovery (O-019, SDD §8.1.1).

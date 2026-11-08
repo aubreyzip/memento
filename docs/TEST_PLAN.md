@@ -14,7 +14,7 @@ Verify that Memento is reliable, private, usable offline, and safe to release on
 |---|---|---|
 | Static | Catch type and style issues | TypeScript, ESLint, formatter |
 | Unit | Domain rules and pure functions | Jest |
-| Repository/integration | SQLite queries, migrations, transactions | Jest + test database/native test setup |
+| Repository/integration | SQLite queries, migrations, transactions | Plain-SQL repositories (Confirmed O-016). Test approach Confirmed (O-017): Jest on a Node SQLite driver running the same migration SQL files, plus an on-device suite for SQLCipher. Phase 0 finding: `better-sqlite3` 13 requires Node ≥ 22; `sql.js` (WebAssembly) works on Node 20. Pin the Node version in CI. |
 | Component | Forms, states, accessibility behavior | React Native Testing Library |
 | End-to-end | Native user journeys and OS integrations | Maestro |
 | Manual | Visual quality, permissions, backup transfer, biometric behavior | Real Android/iOS devices |
@@ -65,6 +65,7 @@ Exact tooling versions must be selected to match the installed Expo SDK.
 
 - Migrations create a valid fresh database.
 - Every migration path from a supported prior schema preserves data.
+- Any migration that rebuilds a table preserves child rows (links, attachments, tag links, reminders) and passes `PRAGMA foreign_key_check`. See DATABASE_DESIGN §8.
 - Built-in seed operations are idempotent.
 - Custom types/categories survive app upgrades and seed changes.
 - Foreign keys and cascade/restrict behavior match the design.
@@ -72,7 +73,7 @@ Exact tooling versions must be selected to match the installed Expo SDK.
 - Duplicate tag normalized names are prevented.
 - Price/date constraints are enforced.
 - Multi-record operations roll back on failure.
-- Search returns correct results for English and Turkish text.
+- Search returns correct results for English and Turkish text, according to the normalization rule in decision O-026. Include `İ/i/I/ı` and `ş ğ ç ö ü` cases.
 - Archived records are excluded from normal lists but remain retrievable.
 - Deletion removes dependent DB rows and schedules file cleanup.
 
@@ -119,7 +120,11 @@ Exact tooling versions must be selected to match the installed Expo SDK.
 - Confirm the database cannot be opened as plain SQLite without the key.
 - Confirm the key is generated securely, stored through the secure key-management flow, and never logged.
 - Confirm every database connection path applies the key before schema reads/migrations.
-- Verify migration and transaction behavior with SQLCipher enabled, including any APIs that open separate connections.
+- Verify migration and transaction behavior with SQLCipher enabled, including any APIs that open separate connections. For example, Expo's `withExclusiveTransactionAsync()` uses a new connection: confirm it is keyed and that foreign-key enforcement is as expected, or confirm it is not used.
+- Key and database state handling (O-019, SDD §8.1.1 states A–E): first run; normal open; database present but key missing; database present with a wrong key; key present but no database. Confirm that the database and its sidecars are quarantined byte-for-byte, the recovery screen appears, and no existing database file is deleted or overwritten without explicit user confirmation.
+- OS backup exclusion (O-018, SDD §12.4):
+  - Android: the merged release manifest has `allowBackup="false"`, `dataExtractionRules`, and `fullBackupContent` with all-domain exclusions for both cloud backup and device transfer; `adb shell bmgr backupnow <package>` does not back up the app; a device-to-device transfer to a second Android device arrives without Memento data.
+  - iOS (O-039): the data directory reports `isExcludedFromBackup = true`; after an encrypted device backup/restore or Quick Start transfer, the app either starts empty or reaches the O-019 recovery screen. It never opens with silently lost or overwritten data.
 
 ### Attachments
 
@@ -139,7 +144,8 @@ Exact tooling versions must be selected to match the installed Expo SDK.
 
 ### App lock
 
-- Verify biometric success, failure, cancellation, unavailable hardware, changed biometrics, and fallback behavior.
+- Verify biometric success, failure, cancellation, lockout, unavailable hardware, no enrolled biometrics, device passcode removed, and fallback behavior.
+- After adding or removing a fingerprint or face profile, confirm the app still unlocks through the OS prompt and **all data remains readable**. Expo Local Authentication cannot detect enrolment changes, and data keys must not be biometric-bound (O-019).
 - Verify manual lock and auto-lock lifecycle.
 - Verify sensitive app content is not exposed in app-switcher snapshots where platform APIs support protection.
 
