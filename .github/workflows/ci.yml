@@ -8,19 +8,33 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
-          # Node 24 baseline (O-009); same file used for local development.
+          # Node 24 baseline (O-009); the same file pins local development.
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm run lint
-      - run: npm test -- --ci
-      # Validates the resolved Expo config (identifiers, deployment targets, plugins).
-      - run: npx expo config --type public > /dev/null
+      - name: Install (engine-strict, lockfile only)
+        run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Format check
+        run: npm run format:check
+      - name: Unit tests
+        run: npm test -- --ci
+      - name: Expo SDK dependency alignment
+        run: npx expo install --check
+      - name: Expo config validation
+        # Resolves app.json and plugins (identifiers, deployment targets).
+        run: npx expo config --type public > /dev/null

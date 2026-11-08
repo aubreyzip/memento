@@ -42,12 +42,12 @@
 ### Phase 1 — Project foundation and infrastructure
 
 - Expo project initialized with the selected SDK recorded (O-009) and the permanent identifier `com.aubreyzip.memento` (O-001).
-- TypeScript strict mode, lint, formatting, CI (lint, typecheck, unit and repository tests).
-- Expo Router shell: four primary areas and the quick-capture entry point as placeholders (B-008 Proposed).
+- TypeScript strict mode, lint (ESLint), formatting (Prettier), CI on GitHub Actions (typecheck, lint, format check, unit and repository tests).
+- Expo Router shell: four primary areas and the quick-capture entry point as placeholders (B-008 Confirmed).
 - Semantic design tokens: light final, dark provisional (O-004); System/Light/Dark setting.
 - i18n scaffolding for English and Turkish, plus the System / English / Türkçe setting with immediate switching, foreground recheck, persistence, and English fallback (Confirmed O-034).
 - Settings persistence.
-- Database infrastructure: connection bootstrap, migration runner (`PRAGMA user_version`, O-016), initial schema, repository interfaces, idempotent seeds with reserved built-in IDs (O-020, O-038).
+- Database infrastructure: connection bootstrap, migration runner (`PRAGMA user_version`, O-016), initial core schema per O-043 (`app_settings`, `collection_types`, `categories`, `collections`, core `entries` columns), repository interfaces, idempotent seeds with reserved built-in IDs (O-020, O-038).
 - Encrypted database foundation: SQLCipher, fail-closed `cipher_version` check, raw-key keying, key storage, O-019 quarantine and recovery screen, O-018 exclusion on Android (config plugin) and iOS (O-039 local module) (Confirmed O-036).
 - **Phase 0 carry-forward gates (G-003)**, before any build stores real data: verify the items in `PHASE_0_REPORT.md` §7 for Phase 1 on a physical Android device and a physical iPhone.
 - Permission audit: strip template permissions Memento does not need (Phase 0 found `SYSTEM_ALERT_WINDOW`, legacy storage permissions and others in the generated manifest), per NFR-035.

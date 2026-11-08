@@ -42,7 +42,7 @@ See [`diagrams/system-context.mmd`](./diagrams/system-context.mmd) and [`diagram
 | Language | TypeScript | Strict type checking. |
 | Navigation | Expo Router | File-based routes. |
 | Database | `expo-sqlite` | Persistent local SQLite. |
-| Encryption | SQLCipher via Expo SQLite config plugin | Requires custom native build; verify on both platforms. |
+| Encryption | SQLCipher via Expo SQLite config plugin (`useSQLCipher`) | Confirmed. Requires custom native build; verify on both platforms (gates G1–G4). |
 | Query layer | Plain parameterized SQL in repositories (no ORM) | Confirmed O-016. Hand-written SQL, numbered migration files, `PRAGMA user_version`. An ORM needs a new decision. |
 | Input validation | Zod | Validate form and import payloads at boundaries. |
 | Forms | React Hook Form | Reusable template-aware entry forms. |
@@ -52,12 +52,13 @@ See [`diagrams/system-context.mmd`](./diagrams/system-context.mmd) and [`diagram
 | Backup file pick/share | Expo DocumentPicker + Expo Sharing | Proposed (review R-30). User-mediated selection of an import file and OS save/share of an export file. |
 | Symmetric encryption | `expo-crypto` AES-GCM | Proposed. Candidate for attachment (O-008) and backup-member (O-007) encryption; it provides no password KDF. |
 | Notifications | Expo Notifications | Local scheduling only. |
-| Localization | i18next plus Expo-compatible locale detection | English and Turkish. |
+| Localization | i18next + Expo Localization | Confirmed. English and Turkish; behavior per O-034 (§7.3). |
 | Unit/component tests | Jest (`jest-expo` preset) + React Native Testing Library | Pure logic and component behavior. Jest and `jest-expo` are installed (O-017); React Native Testing Library is added with the first component test. |
-| Lint | ESLint 9 with `eslint-config-expo` (flat config) | Proposed. Installed to provide the lint step required by `CLAUDE.md`. |
+| Lint | ESLint 9 with `eslint-config-expo` (flat config) | Confirmed. |
+| Formatter | Prettier + `eslint-config-prettier` | Confirmed. Code and config files only; Markdown docs are excluded. |
 | E2E | Maestro | Critical native flows on Android/iOS. |
-| CI | GitHub Actions | Lint, typecheck, tests, build validation as feasible. |
-| Build/submit | EAS Build / EAS Submit | Store-oriented build pipeline. |
+| CI | GitHub Actions | Confirmed. Node 24 from `.nvmrc`; typecheck, lint, format check, tests, SDK dependency check, Expo config validation. |
+| Build/submit | EAS Build (Confirmed) / EAS Submit (Proposed) | EAS Build is required for iOS because development is on Windows. |
 
 Use `npx expo install` for Expo modules, allowing the installed Expo SDK to select compatible versions. Do not copy package versions from an old tutorial.
 
@@ -163,6 +164,8 @@ Current state (8 November 2026, before Phase 1): routes live in `src/app/` (only
 ## 7. Navigation and UI architecture
 
 ### 7.1 Primary navigation
+
+Confirmed (B-008):
 
 - Home
 - Collections

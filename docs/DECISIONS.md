@@ -1,7 +1,7 @@
 # Memento — Product and Technical Decisions Register
 
-**Baseline:** 0.4  
-**Recorded:** 8 November 2026 (baseline 0.1); restructured 8 November 2026 after the pre-Phase 1 documentation review ([`DOCUMENTATION_REVIEW.md`](./DOCUMENTATION_REVIEW.md)); 0.3 records the product owner's 8 November 2026 approvals (O-001, O-015, O-016, O-017, O-018, O-019, O-020, O-036 to O-041), the Phase 0 findings, and the Phase 0 closure (G-003) ([`PHASE_0_REPORT.md`](./PHASE_0_REPORT.md)); 0.4 records the confirmation of O-009, O-034, and O-042 and the scaffold baseline (8 November 2026).  
+**Baseline:** 0.5  
+**Recorded:** 8 November 2026 (baseline 0.1); restructured 8 November 2026 after the pre-Phase 1 documentation review ([`DOCUMENTATION_REVIEW.md`](./DOCUMENTATION_REVIEW.md)); 0.3 records the product owner's 8 November 2026 approvals (O-001, O-015, O-016, O-017, O-018, O-019, O-020, O-036 to O-041), the Phase 0 findings, and the Phase 0 closure (G-003) ([`PHASE_0_REPORT.md`](./PHASE_0_REPORT.md)); 0.4 records the confirmation of O-009, O-034, and O-042 and the scaffold baseline; 0.5 records the confirmation of B-008, the SQLCipher mechanism, i18next + Expo Localization, ESLint, Prettier, GitHub Actions, EAS Build, and O-043 (8 November 2026).  
 **Status:** Phase 0 concluded 8 November 2026 with native validation carried forward as Phase 1 gates (G-003). Product implementation has not started; Phase 1 is next; the project scaffold (commit `2229c57` plus the 0.4 configuration) is the starting point.
 
 **Note on option letters (8 Nov 2026).** The approval message referred to decisions by option letter (for example "O-019 — Option B"). This register and the review recorded each of these decisions as one recommendation, sometimes with an alternative, but without option letters. Where the approval message also described the chosen content, that description was matched against the recorded recommendation and the content is recorded below. Where it did not (O-017), the decision was held as Proposed until the product owner clarified it later the same day ("go with recommended"), which also confirmed O-036 to O-041.
@@ -54,7 +54,7 @@ Rows were previously all labelled "adopted baselines". Statuses below reflect th
 | B-005 | Category templates | Categories use one of the reusable templates `NOTE`, `TASK`, `WISHLIST`, `EVENT`, `PREFERENCE`; entry fields depend on the template. No arbitrary form builder. | Confirmed | Brief ("reusable templates", "category-dependent entry fields"); `CLAUDE.md`. Field details: O-022 |
 | B-006 | Entry ownership | An assigned entry belongs to exactly one collection and one category; Inbox entries have neither. | Confirmed | `CLAUDE.md` Inbox rule |
 | B-007 | Inbox | Quick Capture Inbox for unsorted entries. | Confirmed | Product-owner brief |
-| B-008 | Navigation | Four primary areas: Home, Collections, Search, Settings; quick-add globally accessible. | Proposed | PRD §9, SDD §7.1 |
+| B-008 | Navigation | Four primary areas: Home, Collections, Search, Settings; quick-add globally accessible. | Confirmed (product owner, 8 Nov 2026) | PRD §9, SDD §7.1 |
 | B-009 | Sharing | Private collections with export/import; no live sharing or collaboration in V1. | Confirmed | Product-owner brief |
 | B-010 | Backend | No mandatory account, backend, or cloud sync in V1. | Confirmed | Product-owner brief |
 | B-011 | Monetization | Free initial release; no advertising or subscriptions in V1. | Confirmed | Product-owner brief |
@@ -75,7 +75,7 @@ Status reflects the product-owner brief ("React Native + Expo + TypeScript") and
 | Navigation | Expo Router | Confirmed | `CLAUDE.md` architecture rule. |
 | Data access pattern | Repository interfaces; no SQL in UI/routes | Confirmed | `CLAUDE.md` architecture rule. |
 | Local database | `expo-sqlite` | Confirmed (O-016, 8 Nov 2026) | Provides the SQLCipher config plugin and FTS5. Phase 0 used `expo-sqlite` 58.0.15 (Expo SDK 58). |
-| Database encryption | SQLCipher through the `expo-sqlite` config plugin (`useSQLCipher`) | Proposed (mechanism) | Encryption target is Confirmed (B-013). Requires custom builds. Not yet verified on any device: Phase 0 was concluded before a native build completed (G-003). On-device verification on Android and iOS is a Phase 1 gate. |
+| Database encryption | SQLCipher through the `expo-sqlite` config plugin (`useSQLCipher`) | Confirmed (product owner, 8 Nov 2026) | Encryption target Confirmed (B-013); mechanism confirmed 8 Nov 2026. Requires custom builds. Not yet verified on any device: on-device verification on Android and iOS is a Phase 1 gate (G1–G4). |
 | ORM / query layer | No ORM. Hand-written, parameterized SQL in repositories; numbered SQL migrations tracked with `PRAGMA user_version` | Confirmed (O-016, 8 Nov 2026) | An ORM may be introduced only by a later decision. |
 | Password KDF (backups) | `react-native-quick-crypto` Argon2id (candidate) | Open (part of O-007) | Checked from documentation and source only; not run on a device (`PHASE_0_REPORT.md` §4.4). New native dependency (Nitro Modules); not approved. |
 | iOS backup exclusion | Small local Expo module that sets `isExcludedFromBackup` on Memento's data directories | Confirmed approach (O-039) | Expo FileSystem has no backup-exclusion API (verified). Unverified on device: needs macOS/EAS and a physical iPhone (Phase 1 gate). |
@@ -89,11 +89,13 @@ Status reflects the product-owner brief ("React Native + Expo + TypeScript") and
 | Backup file pick / share | Expo DocumentPicker, Expo Sharing | Proposed | Added by review R-30. |
 | Symmetric encryption | `expo-crypto` AES-GCM | Proposed | Verified available; no password KDF (O-007). |
 | Local notifications | Expo Notifications | Proposed | |
-| Localization | i18next + Expo Localization | Proposed | |
+| Localization | i18next + Expo Localization | Confirmed (product owner, 8 Nov 2026) | Implements O-034. Install with `npx expo install` for SDK-matched versions. |
 | Testing | Jest (`jest-expo` preset), React Native Testing Library, Maestro | Jest Confirmed via O-017 and installed; other tools Proposed | Node-side SQLite driver for repository tests: `sql.js` worked on Node 20 in Phase 0; choose the driver with the CI Node version. |
-| Lint | ESLint 9 + `eslint-config-expo` (flat config) | Proposed | Installed 8 Nov 2026 to provide the lint step required by `CLAUDE.md`; Expo's default. Formatter (e.g. Prettier) not chosen. |
-| CI | GitHub Actions | Proposed | Workflow `.github/workflows/ci.yml` added 8 Nov 2026 to run typecheck, lint, tests, and config validation on Node 24 (from `.nvmrc`), as O-009 requires the same Node baseline in CI. |
-| Builds/submission | EAS Build / EAS Submit | Proposed | |
+| Lint | ESLint 9 + `eslint-config-expo` (flat config) | Confirmed (product owner, 8 Nov 2026) | Installed 8 Nov 2026; Expo's default. |
+| Formatter | Prettier, with `eslint-config-prettier` so ESLint does not enforce formatting | Confirmed (product owner, 8 Nov 2026) | Added in Phase 1 slice 1. Scope: code and config files; Markdown docs are not reformatted. |
+| CI | GitHub Actions | Confirmed (product owner, 8 Nov 2026) | `.github/workflows/ci.yml`: Node 24 from `.nvmrc`; clean install, typecheck, lint, format check, tests, SDK dependency check, config validation. |
+| Builds | EAS Build | Confirmed (product owner, 8 Nov 2026) | Required for iOS builds (development machine is Windows). Needs an Expo account and Apple Developer account. |
+| Submission | EAS Submit | Proposed | Decide before store submission (Phase 6). |
 
 ## 4. Open and proposed decisions — do not guess silently
 
@@ -143,6 +145,7 @@ Each row lists the question, current recommendation, affected documents, the sta
 | O-040 | Definition of a "released migration" | **Decided:** a migration is frozen once any build containing it has stored data the owner wants to keep, including the owner's own long-lived test installs. Before that point, pre-release migrations may be edited. | DATABASE_DESIGN §8, CLAUDE.md | **Confirmed** (product owner, 8 Nov 2026: "go with recommended") | — |
 | O-041 | Customizing built-in types and categories | **Decided:** built-ins can be reordered and archived (hidden), not renamed or deleted; icon and color overrides are optional. (Review R-25) | SRS FR-011, FR-020, FR-025 | **Confirmed** (product owner, 8 Nov 2026: "go with recommended") | — |
 | O-042 | Accent color contrast | **Decided:** keep the existing palette (D-004 unchanged). Coral `#FB6376` is decorative only. Burgundy `#5D2A42` carries important text, interactive elements, and state indicators. A state is never communicated through coral alone. WCAG contrast is maintained: 4.5:1 for text, 3:1 for interactive elements and state indicators. Context: coral on cream is 2.80:1. Enforced by the token tests. In the dark theme burgundy cannot meet contrast on dark backgrounds; the dark-theme equivalent of the burgundy role is part of O-004. | PRD §10.2, SDD §7.2, CLAUDE.md | **Confirmed** (product owner, 8 Nov 2026) | — |
+| O-043 | Phase 1 schema scope | **Decided:** Phase 1 creates only the core tables whose columns do not depend on Open decisions: `app_settings`, `collection_types`, `categories`, `collections`, and `entries` with core columns (identity, Inbox assignment, title, description, pin/archive, timestamps). Template-dependent entry columns (status O-021, dates/recurrence O-024, price O-010, location O-011, search normalization O-026) and the `entry_links`, `entry_attachments`, `tags`, `entry_tags`, and `reminders` tables are added by later migrations in the phases that need them. Pre-release migrations may be edited until they are released (O-040). | DATABASE_DESIGN, ROADMAP | **Confirmed** (product owner, 8 Nov 2026) | — |
 
 ## 5. Explicit V1 exclusions
 

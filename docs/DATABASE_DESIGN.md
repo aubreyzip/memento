@@ -18,6 +18,8 @@
 
 ## 2. Entity relationship diagram
 
+**Phase 1 scope (Confirmed O-043):** the first migration creates `app_settings`, `collection_types`, `categories`, `collections`, and `entries` with core columns only (identity, Inbox assignment, title, description, pin/archive, timestamps). The template-dependent entry columns and the remaining tables in §3 are added by later migrations in the phases that need them.
+
 See [`diagrams/data-model.mmd`](./diagrams/data-model.mmd).
 
 ## 3. Entities and tables

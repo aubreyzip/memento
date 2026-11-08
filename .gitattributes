@@ -1,0 +1,7 @@
+# Keep LF line endings on every OS so Prettier (endOfLine: lf) and Linux CI agree,
+# regardless of a machine-wide core.autocrlf setting.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.svg text eol=lf

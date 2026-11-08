@@ -23,7 +23,10 @@ Prerequisites: Node.js **24** (24.3 or newer; pinned in `.nvmrc` and `engines`, 
 | `npm run android` / `npm run ios` | Start the dev server and open Android or iOS |
 | `npm run typecheck` | TypeScript check (`tsc --noEmit`) |
 | `npm run lint` | ESLint via `expo lint` |
+| `npm run format` / `npm run format:check` | Prettier: format, or check without writing (code and config only; Markdown is excluded) |
 | `npm test` | Jest unit tests |
+
+CI (`.github/workflows/ci.yml`, GitHub Actions on Node 24) runs install, typecheck, lint, format check, tests, the Expo SDK dependency check, and config validation on every push to `main` and every pull request. `.gitattributes` keeps LF line endings on all platforms.
 
 Once SQLCipher and other native modules are added in Phase 1, Expo Go no longer works; use a development build (`npx expo run:android` / `npx expo run:ios`, or EAS Build).
 

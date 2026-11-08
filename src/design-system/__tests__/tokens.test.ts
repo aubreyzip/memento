@@ -43,11 +43,14 @@ describe('O-042 color roles', () => {
     expect(colors.light.primary).toBe(palette.burgundy);
   });
 
-  it.each(['light', 'dark'] as const)('%s theme: coral is never a text or interactive token', (scheme) => {
-    const { accent, textPrimary, textSecondary, primary, onPrimary } = colors[scheme];
-    expect(accent).toBe(palette.coral);
-    expect([textPrimary, textSecondary, primary, onPrimary]).not.toContain(palette.coral);
-  });
+  it.each(['light', 'dark'] as const)(
+    '%s theme: coral is never a text or interactive token',
+    (scheme) => {
+      const { accent, textPrimary, textSecondary, primary, onPrimary } = colors[scheme];
+      expect(accent).toBe(palette.coral);
+      expect([textPrimary, textSecondary, primary, onPrimary]).not.toContain(palette.coral);
+    },
+  );
 });
 
 describe('contrastRatio', () => {

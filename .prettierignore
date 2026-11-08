@@ -1,0 +1,15 @@
+# Generated or vendored
+node_modules/
+package-lock.json
+.expo/
+dist/
+android/
+ios/
+assets/
+
+# Isolated Phase 0 experiments keep their original formatting.
+experiments/
+
+# Documentation is hand-formatted Markdown (tables, line breaks); not reformatted.
+*.md
+docs/
