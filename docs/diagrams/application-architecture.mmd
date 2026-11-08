@@ -1,0 +1,34 @@
+flowchart TB
+    subgraph UI[Presentation]
+      Routes[Expo Router Routes]
+      Screens[Screens and Feature Components]
+      DS[Design System / Themes / Localization]
+    end
+    subgraph APP[Application and Domain]
+      UseCases[Feature Use Cases]
+      Rules[Domain Rules and Template Validation]
+      Ports[Repository and Service Interfaces]
+    end
+    subgraph INFRA[Infrastructure]
+      Repos[SQLite Repositories]
+      DB[(SQLCipher SQLite)]
+      Media[Attachment Storage]
+      Secure[SecureStore / Key Management]
+      Notify[Local Notification Adapter]
+      Backup[Backup / Restore Service]
+      OS[Expo / Native OS APIs]
+    end
+    Routes --> Screens
+    DS --> Screens
+    Screens --> UseCases
+    UseCases --> Rules
+    UseCases --> Ports
+    Ports --> Repos
+    Repos --> DB
+    UseCases --> Media
+    UseCases --> Backup
+    Backup --> DB
+    Backup --> Media
+    Secure --> DB
+    Media --> OS
+    Notify --> OS

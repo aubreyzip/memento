@@ -1,0 +1,10 @@
+flowchart TD
+    A([User taps Quick Add]) --> B[Enter title and optional description]
+    B --> C{Assign now?}
+    C -- No --> D[Save with collection_id and category_id NULL]
+    D --> E[Show in Quick Capture Inbox]
+    C -- Yes --> F[Choose collection and category]
+    F --> G[Show template-appropriate fields]
+    G --> H[Validate and save assigned entry]
+    E --> I([Entry can be organized later])
+    H --> J([Entry appears in collection and category])

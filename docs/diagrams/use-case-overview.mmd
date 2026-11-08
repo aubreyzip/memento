@@ -1,0 +1,43 @@
+flowchart LR
+    User([App User])
+    OS([Mobile Operating System])
+    Picker([Photo Picker])
+    Files([File Provider / Share Sheet])
+    Bio([Biometric Authentication])
+    Notify([Local Notification Service])
+
+    subgraph Memento[Memento]
+      UC1([Set up app and preferences])
+      UC2([Manage collections and types])
+      UC3([Manage categories and templates])
+      UC4([Quick Capture to Inbox])
+      UC5([Create and manage entries])
+      UC6([Attach photos and links])
+      UC7([Tag, search, filter and sort])
+      UC8([Pin, archive and update status])
+      UC9([Schedule reminders])
+      UC10([Export backup])
+      UC11([Import / restore backup])
+      UC12([Lock / unlock app])
+      UC13([Delete local data])
+    end
+
+    User --> UC1
+    User --> UC2
+    User --> UC3
+    User --> UC4
+    User --> UC5
+    User --> UC6
+    User --> UC7
+    User --> UC8
+    User --> UC9
+    User --> UC10
+    User --> UC11
+    User --> UC12
+    User --> UC13
+    Picker --> UC6
+    Files --> UC10
+    Files --> UC11
+    Bio --> UC12
+    Notify --> UC9
+    OS --> UC1

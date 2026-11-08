@@ -1,0 +1,23 @@
+flowchart TD
+    A([User selects Backup / Restore]) --> B{Operation}
+    B -- Export --> C[Choose Full Backup or Collection Export]
+    C --> D[Create consistent data snapshot]
+    D --> E[Collect referenced media]
+    E --> F[Build versioned archive and encrypt]
+    F --> G[Validate archive and write temporary file]
+    G --> H[Open OS save/share interface]
+    H --> I([Report export result])
+    B -- Import --> J[Select backup file]
+    J --> K[Validate container and format version]
+    K --> L[Request passphrase and authenticate/decrypt]
+    L --> M[Stage records and media]
+    M --> N[Validate schema, IDs, hashes, and references]
+    N --> O[Show import preview]
+    O --> P{User confirms?}
+    P -- No --> Q[Discard staging files]
+    P -- Yes --> R[Apply recoverable import/restore]
+    R --> S[Reconcile reminders and clean staging]
+    S --> T([Report success])
+    K -. invalid .-> U([Fail without changing live data])
+    L -. wrong password .-> U
+    N -. corrupt/incompatible .-> U

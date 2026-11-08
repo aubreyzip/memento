@@ -1,0 +1,83 @@
+erDiagram
+    COLLECTION_TYPES ||--o{ COLLECTIONS : classifies
+    COLLECTIONS o|--o{ ENTRIES : contains
+    CATEGORIES o|--o{ ENTRIES : classifies
+    ENTRIES ||--o{ ENTRY_LINKS : has
+    ENTRIES ||--o{ ENTRY_ATTACHMENTS : has
+    ENTRIES ||--o{ REMINDERS : schedules
+    ENTRIES ||--o{ ENTRY_TAGS : labeled_by
+    TAGS ||--o{ ENTRY_TAGS : applied_to
+
+    COLLECTION_TYPES {
+      text id PK
+      text key
+      text name
+      text icon
+      text accent_color
+      boolean is_system
+      boolean is_active
+    }
+    COLLECTIONS {
+      text id PK
+      text collection_type_id FK
+      text name
+      text description
+      text created_at
+      text archived_at
+    }
+    CATEGORIES {
+      text id PK
+      text key
+      text name
+      text template_key
+      boolean is_system
+      boolean is_active
+    }
+    ENTRIES {
+      text id PK
+      text collection_id FK "nullable for Inbox"
+      text category_id FK "nullable for Inbox"
+      text title
+      text description
+      text status
+      text priority
+      text date_start
+      text date_end
+      integer price_minor
+      text currency_code
+      text location_text
+      boolean is_pinned
+      text archived_at
+    }
+    ENTRY_LINKS {
+      text id PK
+      text entry_id FK
+      text title
+      text url
+      integer sort_order
+    }
+    ENTRY_ATTACHMENTS {
+      text id PK
+      text entry_id FK
+      text relative_path
+      text mime_type
+      integer file_size_bytes
+      text content_hash
+    }
+    TAGS {
+      text id PK
+      text normalized_name UK
+      text display_name
+    }
+    ENTRY_TAGS {
+      text entry_id PK, FK
+      text tag_id PK, FK
+    }
+    REMINDERS {
+      text id PK
+      text entry_id FK
+      text scheduled_at_utc
+      text time_zone_id
+      text notification_id
+      boolean is_enabled
+    }

@@ -1,0 +1,185 @@
+# Test Plan — Memento
+
+**Version:** 0.1  
+**Date:** 8 November 2026  
+**Status:** Baseline test strategy
+
+## 1. Objectives
+
+Verify that Memento is reliable, private, usable offline, and safe to release on Android and iOS. Tests must cover both ordinary user workflows and high-risk areas: database migrations, attachment lifecycle, SQLCipher verification, and backup/restore.
+
+## 2. Test levels and tools
+
+| Level | Purpose | Candidate tools |
+|---|---|---|
+| Static | Catch type and style issues | TypeScript, ESLint, formatter |
+| Unit | Domain rules and pure functions | Jest |
+| Repository/integration | SQLite queries, migrations, transactions | Jest + test database/native test setup |
+| Component | Forms, states, accessibility behavior | React Native Testing Library |
+| End-to-end | Native user journeys and OS integrations | Maestro |
+| Manual | Visual quality, permissions, backup transfer, biometric behavior | Real Android/iOS devices |
+| Release | Build/signing/store validation | EAS Build, Play Console, App Store Connect |
+
+Exact tooling versions must be selected to match the installed Expo SDK.
+
+## 3. Test environments
+
+- Unit tests: deterministic test data and isolated database instances.
+- Android: emulator plus at least one physical Android device for SQLCipher, file access, notifications, and biometrics.
+- iOS: simulator for routine UI tests plus a physical iPhone for secure storage, SQLCipher, photo picker, notifications, and biometrics.
+- Build variants: development/preview builds with the same native configuration as release; SQLCipher must not be validated in Expo Go.
+- Locale matrix: English and Turkish.
+- Theme matrix: System, Light, Dark.
+- Network matrix: online and airplane mode; core tests must pass offline.
+
+## 4. Unit test coverage
+
+### Domain rules
+
+- Collection type validation and deletion restrictions.
+- Category template validation.
+- Template-specific valid status sets.
+- Note/Preference entries do not require status.
+- Inbox invariant (both collection/category null or both assigned).
+- Priority validation.
+- Price conversion to/from minor units and currency validation.
+- Date-only and UTC instant handling.
+- Tag normalization and duplicate detection.
+- URL scheme validation.
+
+### Application services
+
+- Create/update/archive/delete collection.
+- Create custom collection type and prevent deletion while in use.
+- Create/update/archive/delete custom category.
+- Quick Capture creates an Inbox entry.
+- Assign Inbox entry to collection/category atomically.
+- Move assigned entry back to Inbox.
+- Entry CRUD and status update.
+- Pinned and archived list behavior.
+- Search/filter combinations.
+- Reminder creation/cancellation and reconciliation decisions.
+- Backup manifest generation and validation.
+
+## 5. Repository and database tests
+
+- Migrations create a valid fresh database.
+- Every migration path from a supported prior schema preserves data.
+- Built-in seed operations are idempotent.
+- Custom types/categories survive app upgrades and seed changes.
+- Foreign keys and cascade/restrict behavior match the design.
+- Invalid half-assigned Inbox entries are rejected by SQLite.
+- Duplicate tag normalized names are prevented.
+- Price/date constraints are enforced.
+- Multi-record operations roll back on failure.
+- Search returns correct results for English and Turkish text.
+- Archived records are excluded from normal lists but remain retrievable.
+- Deletion removes dependent DB rows and schedules file cleanup.
+
+## 6. Functional acceptance scenarios
+
+| ID | Scenario | Expected result |
+|---|---|---|
+| T-001 | First launch with English device locale | English onboarding appears; no account is requested. |
+| T-002 | First launch with Turkish device locale | Turkish is selected or offered appropriately. |
+| T-003 | Change language after creating entries | UI labels change; user-created text is unchanged. |
+| T-004 | Switch System/Light/Dark | Theme updates and persists after restart. |
+| T-005 | Create Person, Space, Project, Event, General collections | All types are selectable and saved. |
+| T-006 | Create a custom collection type | It appears in collection creation and persists. |
+| T-007 | Create a custom category using each template | Category fields/status behavior match its template. |
+| T-008 | Quick Capture with only a title | Entry appears in Inbox and global search. |
+| T-009 | Assign Inbox entry | Both collection and category are set together. |
+| T-010 | Try partial Inbox assignment | Operation is rejected. |
+| T-011 | Create a task and change status | Only Task statuses are available and persisted. |
+| T-012 | Create a preference | No status is required or displayed. |
+| T-013 | Add multiple links | Links are validated, ordered, and reopen correctly. |
+| T-014 | Add multiple photos | Files are copied to managed storage and remain after restart. |
+| T-015 | Add date/price/location/tags | Values persist and display with locale-aware formatting. |
+| T-016 | Search across collections and Inbox | Matching records appear with correct collection context. |
+| T-017 | Filter by category/status/priority/tag | Results match all selected filters. |
+| T-018 | Pin and archive entries | Pinned items surface; archived items leave normal lists but remain accessible. |
+| T-019 | Schedule reminder with permission granted | OS schedules notification and tapping opens the entry. |
+| T-020 | Deny notification permission | App remains usable and explains that notification delivery is disabled. |
+| T-021 | Delete an entry with attachments/reminders | Related metadata, files, and notifications are cleaned up. |
+| T-022 | Export full backup | Backup contains all expected records and media. |
+| T-023 | Export one collection | Only selected collection data and dependencies are included. |
+| T-024 | Restore valid backup | Preview is shown; confirmed restore reproduces data and attachments. |
+| T-025 | Import wrong password/corrupt archive | Import fails without changing live data. |
+| T-026 | Import unsupported backup version | Clear error; live data remains unchanged. |
+| T-027 | Full restore interrupted | Previous live data remains recoverable. |
+| T-028 | Delete all app data | User confirms; data and attachment files are removed. |
+| T-029 | Use app in airplane mode | All core features continue to work. |
+
+## 7. Security tests
+
+### SQLCipher
+
+- Confirm `PRAGMA cipher_version` returns a valid version on Android and iOS production-style builds.
+- Confirm startup fails safely when SQLCipher is unavailable in a build that requires it.
+- Confirm the database cannot be opened as plain SQLite without the key.
+- Confirm the key is generated securely, stored through the secure key-management flow, and never logged.
+- Confirm every database connection path applies the key before schema reads/migrations.
+- Verify migration and transaction behavior with SQLCipher enabled, including any APIs that open separate connections.
+
+### Attachments
+
+- Confirm attachments are stored only in app-private locations.
+- Confirm filenames are opaque/generated and path traversal is rejected.
+- Verify the selected attachment-protection strategy independently of database encryption.
+- Confirm an attachment cannot be read through the database key alone if file encryption is implemented.
+- Verify temp/orphan cleanup and missing-file handling.
+
+### Backups
+
+- Wrong passphrase and altered archive fail authentication.
+- Tampered manifest/media hash is detected.
+- No plaintext entry records or media are exposed in the exported archive if the format promises full archive encryption.
+- Passphrases and keys are never logged or stored in plaintext.
+- Large/malformed archives are bounded to avoid memory exhaustion/path traversal.
+
+### App lock
+
+- Verify biometric success, failure, cancellation, unavailable hardware, changed biometrics, and fallback behavior.
+- Verify manual lock and auto-lock lifecycle.
+- Verify sensitive app content is not exposed in app-switcher snapshots where platform APIs support protection.
+
+## 8. Accessibility and UX checks
+
+- Screen-reader labels for primary controls, icon-only buttons, form fields, status, priority, and reminders.
+- Text scaling at larger system font sizes.
+- Color contrast for all text and important controls.
+- Status/priority not communicated by color alone.
+- Empty states, validation errors, permission denials, and long-running operations are understandable.
+- Turkish labels fit without clipping or unexplained abbreviations.
+- Keyboard navigation/focus behavior for text inputs and modals is sensible.
+
+## 9. Performance checks
+
+Use a documented reference device and repeatable synthetic dataset.
+
+- Initial launch and home rendering.
+- Open a collection with many entries.
+- Search/filter with 10,000 entries.
+- Scroll a list with multiple photo attachments.
+- Import/export a representative large backup.
+- Memory use while generating thumbnails and restoring media.
+
+Initial target: common local queries over 10,000 entries complete within 300 ms on the agreed reference device. Treat this as a measurement goal, not an unverified claim.
+
+## 10. Regression and release gates
+
+A candidate release must:
+
+- Pass lint, typecheck, unit, integration, and critical E2E tests.
+- Pass critical manual tests on both platforms.
+- Pass clean install and upgrade/migration tests.
+- Pass full backup/restore tests including media.
+- Pass SQLCipher and attachment security verification on real custom builds.
+- Have no known blocker/high-severity data-loss or privacy defects.
+- Have all release checklist items completed or explicitly waived by the product owner.
+
+## 11. Test data and privacy
+
+- Use synthetic names, notes, URLs, locations, and images only.
+- Never put real personal notes from the developer's life into automated fixtures, screenshots, issue reports, or logs.
+- Do not commit real backup files, encryption keys, passphrases, or user media.

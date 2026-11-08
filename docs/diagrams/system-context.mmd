@@ -1,0 +1,19 @@
+flowchart LR
+    User([App User])
+    App[Memento Mobile App\nReact Native + Expo]
+    DB[(Encrypted Local SQLite\nSQLCipher)]
+    Files[(App-private Media Files)]
+    OS[Device Operating System]
+    Picker[Photo Picker]
+    Share[File Provider / Share Sheet]
+    Notify[Local Notifications]
+    Bio[Biometric / Device Authentication]
+    User --> App
+    App <--> DB
+    App <--> Files
+    App <--> OS
+    OS <--> Picker
+    OS <--> Share
+    OS <--> Notify
+    OS <--> Bio
+    App -. "No V1 backend, account, cloud sync, or remote user-data service" .-> NoCloud["No V1 backend or cloud sync"]
