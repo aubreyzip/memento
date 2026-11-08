@@ -28,7 +28,7 @@ Prerequisites: Node.js **24** (24.3 or newer; pinned in `.nvmrc` and `engines`, 
 
 CI (`.github/workflows/ci.yml`, GitHub Actions on Node 24) runs install, typecheck, lint, format check, tests, the Expo SDK dependency check, and config validation on every push to `main` and every pull request. `.gitattributes` keeps LF line endings on all platforms.
 
-Once SQLCipher and other native modules are added in Phase 1, Expo Go no longer works; use a development build (`npx expo run:android` / `npx expo run:ios`, or EAS Build).
+The app uses SQLCipher (`expo-sqlite` with `useSQLCipher`) and other native modules, so **Expo Go does not work**: Expo Go's SQLite has no SQLCipher, so startup is expected to stop on the "cannot encrypt your data" screen by design (not yet observed on a device). Use a development build (`npx expo run:android` / `npx expo run:ios` on a Mac, or EAS Build).
 
 ## Read before implementing
 

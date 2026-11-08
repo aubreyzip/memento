@@ -3,8 +3,24 @@ import { fireEvent, renderRouter, screen } from 'expo-router/testing-library';
 // Device primary language: English.
 jest.mock('expo-localization', () => ({ getLocales: () => [{ languageCode: 'en' }] }));
 
+// The real layout runs the encrypted startup; tests use the fake device storage instead.
+jest.mock('../../database/bootstrap/start-database', () => {
+  const { FakeEncryptedStorage } = jest.requireActual(
+    '../../database/testing/fake-encrypted-storage',
+  );
+  const { openEncryptedDatabase } = jest.requireActual(
+    '../../database/bootstrap/open-encrypted-database',
+  );
+  return { startDatabase: () => openEncryptedDatabase(new FakeEncryptedStorage().dependencies()) };
+});
+
 /** Renders the real route tree in src/app. */
-const renderApp = (initialUrl = '/') => renderRouter('./src/app', { initialUrl });
+async function renderApp(initialUrl = '/') {
+  const result = await renderRouter('./src/app', { initialUrl });
+  // Wait for the database startup and settings load before the app shell appears.
+  await screen.findByLabelText('Home');
+  return result;
+}
 
 const TAB_LABELS = ['Home', 'Collections', 'Search', 'Settings'];
 

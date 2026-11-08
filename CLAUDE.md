@@ -68,7 +68,7 @@ Whenever a product or architecture decision is made or changes:
 - Checks before declaring work done: `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test` (the same checks CI runs). Formatting is Prettier's job; do not hand-format against it.
 - Keep routes thin. Screens orchestrate feature components and application actions; they should not contain SQL statements.
 - Keep persistence behind repository interfaces. UI components must not access SQLite directly.
-- Data access is plain, parameterized SQL through `expo-sqlite` inside repositories; no ORM in V1 (O-016). Migrations are numbered SQL files tracked with `PRAGMA user_version`. Never build SQL by concatenating user input.
+- Data access is plain, parameterized SQL through `expo-sqlite` inside repositories; no ORM in V1 (O-016). Migrations are numbered modules in `src/database/migrations/` (`NNNN-name.ts`), each holding one plain SQL script, tracked with `PRAGMA user_version`; repositories and migrations depend only on the `SqlDatabase` interface so the same SQL runs on device and in Node tests. Never build SQL by concatenating user input.
 - Use `withTransactionAsync()` on the keyed, configured connection. `withExclusiveTransactionAsync()` opens a separate connection that does not inherit `PRAGMA key` or `PRAGMA foreign_keys`; do not use it unless that connection is keyed and configured first.
 - Table-rebuild migrations must follow the FK-safe procedure in `docs/DATABASE_DESIGN.md` §8; a naive rebuild cascade-deletes child rows.
 - Built-in collection types and categories use permanent IDs from the reserved built-in namespace (O-020; format O-038). User-created rows use random v4 UUIDs and must never use an ID in the reserved namespace.

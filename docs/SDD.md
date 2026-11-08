@@ -252,14 +252,16 @@ Keys: one database key and one media key, each 32 random bytes from a CSPRNG, st
 1. **Restore from a Memento backup.** Runs the normal import flow (UC-15) into a new database.
 2. **Start fresh.** Creates a new, empty database. The quarantined file is kept. Deleting it requires a separate, explicit confirmation, offered on this screen and in Settings → Data Management.
 
+**Implementation (Phase 1 slice 5b):** `src/database/bootstrap/open-encrypted-database.ts` (state machine, device-independent), wired to device modules in `start-database.ts` (expo-sqlite with `useSQLCipher: true`, SecureStore, `expo-crypto` `getRandomBytes`, Expo FileSystem). Refinements of O-019 made while implementing: a key-store **read error** (for example storage not yet available) is reported as an error and never treated as a missing key, so it can never trigger a quarantine; a 0-byte database file counts as no database; the new key is read back before a database is created with it; a database newer than the app, or a failed migration, shows an error and leaves the file untouched; WAL journal mode is enabled after keying. `DatabaseGate` renders a loading screen, then the app, the recovery screen, or an error screen with "Try again". **Interim gaps until Phase 5:** the recovery screen offers only "Start fresh" (with confirmation) and states that restoring from a Memento backup will be available later, because backup/restore is not built yet; deleting quarantined files is not offered yet (planned with Data Management, O-033). Verified with a fake encrypted store in Jest; real SQLCipher behavior is gates G1–G4.
+
 Startup must reach the recovery screen without touching user content. Screens shown before the database opens (splash, cipher-unavailable error, recovery) use the System appearance and System language with English fallback, because preferences live in the encrypted `app_settings` table (Confirmed O-044). The SQLCipher availability check (`cipher_version`) runs before any of these states and fails closed.
 
 ### 8.2 Repository boundaries
 
 Suggested repositories:
 - `CollectionRepository`
-- `CollectionTypeRepository`
-- `CategoryRepository`
+- `CollectionTypeRepository` — read-only in Phase 1 (`listAll`); write operations in Phase 2.
+- `CategoryRepository` — read-only in Phase 1 (`listAll`); write operations in Phase 2.
 - `EntryRepository`
 - `TagRepository`
 - `ReminderRepository`

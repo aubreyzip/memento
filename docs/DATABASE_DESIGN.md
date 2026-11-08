@@ -18,6 +18,8 @@
 
 ## 2. Entity relationship diagram
 
+**Phase 1 implementation (slice 5a, migration 0001):** as O-043 below, plus O-047(b): `collection_types` and `categories` have no lifecycle column yet (`is_active` vs `archived_at` waits for O-025), `icon` columns stay NULL until O-046/O-003, and CHECK constraints enforce the reserved built-in ID namespace (`id GLOB '4d454d30-0000-8000-8*'` for system rows only). Built-in rows store no display name; names come from translation resources.
+
 **Phase 1 scope (Confirmed O-043):** the first migration creates `app_settings`, `collection_types`, `categories`, `collections`, and `entries` with core columns only (identity, Inbox assignment, title, description, pin/archive, timestamps). The template-dependent entry columns and the remaining tables in §3 are added by later migrations in the phases that need them.
 
 See [`diagrams/data-model.mmd`](./diagrams/data-model.mmd).
@@ -303,7 +305,7 @@ System category display names must be localized from translation resources, not 
   4. Turn foreign keys back on.
 
   Every rebuild migration needs a test proving that child rows survive.
-- Data access uses hand-written, numbered SQL migration files applied in order and tracked with `PRAGMA user_version`, each in its own transaction (Confirmed O-016). The Phase 0 Node harness demonstrates the runner, rollback on failure, and the FK-safe rebuild (`PHASE_0_REPORT.md` §4.1; code in `experiments/phase-0/node-harness/`).
+- Data access uses hand-written, numbered migrations applied in order and tracked with `PRAGMA user_version`, each in its own transaction (Confirmed O-016). Each migration is a TypeScript module `src/database/migrations/NNNN-name.ts` whose `sql` field is a plain SQL script; modules (not `.sql` files) let Metro and Jest load them without custom transformers. The runner refuses a database whose version is newer than the app and never modifies it. Code: `src/database/` (Phase 1 slice 5a); the Phase 0 prototype is in `experiments/phase-0/node-harness/` (`PHASE_0_REPORT.md` §4.1).
 - A migration is "released", and therefore frozen, once any build containing it has stored data the owner wants to keep, including the owner's long-lived test installs (Confirmed O-040).
 
 ## 9. Backup inclusion matrix
