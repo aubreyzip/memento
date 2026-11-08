@@ -9,7 +9,8 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.aubreyzip.memento",
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "deploymentTarget": "16.4"
     },
     "android": {
       "package": "com.aubreyzip.memento",
@@ -29,6 +30,14 @@
           "backgroundColor": "#FFF9EC",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 24
+          }
         }
       ]
     ],

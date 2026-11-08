@@ -14,7 +14,7 @@ Verify that Memento is reliable, private, usable offline, and safe to release on
 |---|---|---|
 | Static | Catch type and style issues | TypeScript (`npm run typecheck`), ESLint with `eslint-config-expo` (`npm run lint`, which runs `expo lint`; on Node < 22.13 run `npx eslint .`), formatter not yet chosen |
 | Unit | Domain rules and pure functions | Jest with the `jest-expo` preset (installed). Tests live next to the code in `__tests__/`; `experiments/` is excluded. Run with `npm test`. |
-| Repository/integration | SQLite queries, migrations, transactions | Plain-SQL repositories (Confirmed O-016). Test approach Confirmed (O-017): Jest on a Node SQLite driver running the same migration SQL files, plus an on-device suite for SQLCipher. Phase 0 finding: `better-sqlite3` 13 requires Node ≥ 22; `sql.js` (WebAssembly) works on Node 20. Pin the Node version in CI. |
+| Repository/integration | SQLite queries, migrations, transactions | Plain-SQL repositories (Confirmed O-016). Test approach Confirmed (O-017): Jest on a Node SQLite driver running the same migration SQL files, plus an on-device suite for SQLCipher. Phase 0 finding: `better-sqlite3` 13 requires Node ≥ 22 (satisfied by the Node 24 baseline, O-009); `sql.js` (WebAssembly) also works. Node is pinned to 24 locally and in CI. |
 | Component | Forms, states, accessibility behavior | React Native Testing Library |
 | End-to-end | Native user journeys and OS integrations | Maestro |
 | Manual | Visual quality, permissions, backup transfer, biometric behavior | Real Android/iOS devices |
@@ -28,7 +28,9 @@ Exact tooling versions must be selected to match the installed Expo SDK.
 - Android: emulator plus at least one physical Android device for SQLCipher, file access, notifications, and biometrics.
 - iOS: simulator for routine UI tests plus a physical iPhone for secure storage, SQLCipher, photo picker, notifications, and biometrics.
 - Build variants: development/preview builds with the same native configuration as release; SQLCipher must not be validated in Expo Go.
-- Locale matrix: English and Turkish.
+- Locale matrix: language setting System (with English, Turkish, and one unsupported device language), English, and Türkçe.
+- OS matrix: Android 7.0 (API 24) as the minimum plus a current Android version; iOS 16.4 as the minimum plus a current iOS version (O-009).
+- Tooling: Node.js 24 (≥ 24.3) locally and in CI.
 - Theme matrix: System, Light, Dark.
 - Network matrix: online and airplane mode; core tests must pass offline.
 
@@ -82,7 +84,7 @@ Exact tooling versions must be selected to match the installed Expo SDK.
 | ID | Scenario | Expected result |
 |---|---|---|
 | T-001 | First launch with English device locale | English onboarding appears; no account is requested. |
-| T-002 | First launch with Turkish device locale | Turkish is selected or offered appropriately. |
+| T-002 | First launch with Turkish device locale | Language setting is System and the UI is Turkish. |
 | T-003 | Change language after creating entries | UI labels change; user-created text is unchanged. |
 | T-004 | Switch System/Light/Dark | Theme updates and persists after restart. |
 | T-005 | Create Person, Space, Project, Event, General collections | All types are selectable and saved. |
@@ -110,6 +112,10 @@ Exact tooling versions must be selected to match the installed Expo SDK.
 | T-027 | Full restore interrupted | Previous live data remains recoverable. |
 | T-028 | Delete all app data | User confirms; data and attachment files are removed. |
 | T-029 | Use app in airplane mode | All core features continue to work. |
+| T-030 | Switch language System → English → Türkçe → System in Settings | Each change applies immediately without restart; the choice persists after restart (O-034). |
+| T-031 | With System selected, change the device language and return to the app | The app follows the new device language on foreground. With English or Türkçe selected, it does not change. |
+| T-032 | Device language other than English or Turkish, with System selected | UI shows English. |
+| T-033 | A key missing from the Turkish resources | That string falls back to English; no raw key or blank text is shown. |
 
 ## 7. Security tests
 
@@ -154,7 +160,7 @@ Exact tooling versions must be selected to match the installed Expo SDK.
 - Screen-reader labels for primary controls, icon-only buttons, form fields, status, priority, and reminders.
 - Text scaling at larger system font sizes.
 - Color contrast for all text and important controls.
-- Status/priority not communicated by color alone.
+- Status/priority not communicated by color alone; coral is never the only indicator of any state (O-042). Token tests enforce 4.5:1 text contrast and 3:1 for `primary`.
 - Empty states, validation errors, permission denials, and long-running operations are understandable.
 - Turkish labels fit without clipping or unexplained abbreviations.
 - Keyboard navigation/focus behavior for text inputs and modals is sensible.

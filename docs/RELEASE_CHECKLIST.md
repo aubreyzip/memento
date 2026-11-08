@@ -43,6 +43,7 @@
 
 - [ ] Fresh install tested on Android.
 - [ ] Fresh install tested on iOS.
+- [ ] Release binaries declare Android minSdk 24 and iOS deployment target 16.4, and the app was tested on those minimum versions (O-009).
 - [ ] Upgrade/migration tested from prior supported schema.
 - [ ] Core functionality tested in airplane mode.
 - [ ] Quick Capture Inbox tested.

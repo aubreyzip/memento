@@ -15,7 +15,7 @@ Memento is a private, offline-first personal information organizer for rememberi
 
 ## Development
 
-Prerequisites: Node.js **22.13 or newer** (required by Expo SDK 58), npm, and for native builds the Android SDK or Xcode. Install with `npm install`.
+Prerequisites: Node.js **24** (24.3 or newer; pinned in `.nvmrc` and `engines`, enforced by `.npmrc` `engine-strict`), npm, and for native builds the Android SDK or Xcode. Targets: Android 7.0 (API 24)+ and iOS 16.4+. Install with `npm install`.
 
 | Command | Purpose |
 |---|---|

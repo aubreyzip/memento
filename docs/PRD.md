@@ -230,7 +230,7 @@ Quick Add should be available from the primary app shell and major content scree
 | Peach | `#FFDCCC` | Secondary surfaces and cards |
 | Cream | `#FFF9EC` | Light-theme app background |
 
-Use semantic design tokens rather than hardcoding color values throughout components. Confirm contrast for each text/background pairing. Dark-theme hex values are not yet finalized; they must be designed and tested rather than mechanically inverting the light theme.
+Use semantic design tokens rather than hardcoding color values throughout components. Confirm contrast for each text/background pairing. Coral is decorative only: burgundy carries important text, interactive elements, and state indicators, and no state is communicated through coral alone, because coral on cream does not meet WCAG contrast (O-042). Dark-theme hex values are not yet finalized; they must be designed and tested rather than mechanically inverting the light theme.
 
 ### 10.3 Visual behavior
 

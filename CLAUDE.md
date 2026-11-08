@@ -61,6 +61,8 @@ Whenever a product or architecture decision is made or changes:
 
 ## Architecture rules
 
+- Technical baseline (O-009): Expo SDK 58, React Native 0.88.x, Node.js 24 (≥ 24.3) locally and in CI, Android 7.0 (API 24)+, iOS 16.4+. Keep `.nvmrc`, `package.json` `engines`, CI, and the deployment targets in `app.json` aligned when any of these changes.
+- Coral is decorative only; burgundy carries important text, interactive elements, and state indicators; never show a state through coral alone (O-042).
 - Use React Native with Expo and TypeScript. Use Expo Router for navigation; routes live in `src/app/`. V1 is mobile only: do not add web dependencies, web config, or `.web.tsx` files.
 - Colors come only from `src/design-system/tokens.ts` semantic tokens; keep the token contrast tests passing.
 - Checks before declaring work done: `npm run typecheck`, `npm run lint`, `npm test`.

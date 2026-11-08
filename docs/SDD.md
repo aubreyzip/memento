@@ -38,7 +38,7 @@ See [`diagrams/system-context.mmd`](./diagrams/system-context.mmd) and [`diagram
 
 | Concern | Proposed technology | Notes |
 |---|---|---|
-| Mobile runtime | React Native + Expo | Shared Android/iOS app. Mobile only: no web target in V1 (web dependencies and config removed). Expo SDK 58 (React Native 0.88) is installed; formal SDK and minimum OS selection is O-009. Expo SDK 58 requires Node ≥ 22.13. |
+| Mobile runtime | React Native + Expo | Shared Android/iOS app. Mobile only: no web target in V1 (web dependencies and config removed). Expo SDK 58, React Native 0.88.x, Node.js 24 (≥ 24.3), Android 7.0 (API 24)+, iOS 16.4+ (Confirmed O-009). Minimums pinned via `ios.deploymentTarget` and `expo-build-properties`. |
 | Language | TypeScript | Strict type checking. |
 | Navigation | Expo Router | File-based routes. |
 | Database | `expo-sqlite` | Persistent local SQLite. |
@@ -191,10 +191,11 @@ Light palette source values:
 
 Dark theme should use a dark plum/burgundy-tinted neutral background and accessible foregrounds. Exact values must be validated and documented in the design tokens; do not assume the light palette can simply be inverted.
 
-**Implementation:** `src/design-system/tokens.ts` defines the palette and the semantic tokens `background`, `surface`, `highlight`, `textPrimary`, `textSecondary`, `primary`, `onPrimary`, `accent`, and `border`. Light values come from the palette; `textSecondary` is burgundy blended 80% over cream (`#7D5364`). Dark values are provisional (O-004). Status and priority tokens are not defined yet, because their colors have not been designed. `__tests__/tokens.test.ts` enforces 4.5:1 text contrast. Coral on cream is 2.80:1, so coral is never used for text or as the only indicator of state (O-042).
+**Implementation:** `src/design-system/tokens.ts` defines the palette and the semantic tokens `background`, `surface`, `highlight`, `textPrimary`, `textSecondary`, `primary`, `onPrimary`, `accent`, and `border`. Light values come from the palette; `textSecondary` is burgundy blended 80% over cream (`#7D5364`). Dark values are provisional (O-004). Status and priority tokens are not defined yet, because their colors have not been designed. `__tests__/tokens.test.ts` enforces 4.5:1 text contrast. Color roles (Confirmed O-042): burgundy (`primary`, `textPrimary`) carries important text, interactive elements, and state indicators; coral (`accent`) is decorative only, because coral on cream is 2.80:1; `border` is for decorative dividers, and control boundaries use `primary`. Tests enforce 4.5:1 for text, 3:1 for `primary` on backgrounds, and that coral is never a text or interactive token. The dark-theme counterpart of the burgundy role is part of O-004.
 
 ### 7.3 Localization
 
+- Language setting (Confirmed O-034): System (default), English, Türkçe. System follows the device language. Apply changes immediately without restart; while System is selected, re-read the OS locale when the app returns to the foreground (`AppState`). Persist the selection locally. Missing keys fall back to English. Expo Localization (SDK 58) provides `getLocales()` and the `supportedLocales` config-plugin option for per-app language in the OS settings; its docs recommend re-reading locales on foreground because Android can change locale without restarting the app.
 - Keep all UI strings in translation resources (`en`, `tr`).
 - Store user-created names/descriptions exactly as entered.
 - Format dates, numbers, and currencies using locale-aware APIs.

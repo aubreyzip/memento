@@ -52,14 +52,14 @@ See [`diagrams/use-case-overview.mmd`](./diagrams/use-case-overview.mmd).
 
 **Main flow:**
 1. App displays a short introduction and explains local-first storage.
-2. App proposes a language based on device locale where supported.
-3. User confirms or selects English/Turkish.
+2. Language starts as **System**, which follows the device language (O-034).
+3. User keeps System or selects English or Türkçe.
 4. User selects System, Light, or Dark appearance, or keeps the default.
 5. App initializes the database, built-in collection types, and built-in categories.
 6. App opens Home.
 
 **Alternatives / exceptions:**
-- If the device locale is unsupported, default to English and allow a change in Settings.
+- If the device language is neither English nor Turkish, System shows English (the fallback language), and the user can change it in Settings.
 - If database initialization or required encryption verification fails, do not silently create an unencrypted database; show a recoverable error.
 - If a database file exists but its key is missing or does not open it (for example, after an OS-level device restore or a device transfer), do not delete or recreate the database automatically (O-019, SDD §8.1.1):
   1. App moves the unreadable database aside to a quarantine name.
@@ -210,8 +210,8 @@ See [`diagrams/use-case-overview.mmd`](./diagrams/use-case-overview.mmd).
 
 **Main flow:**
 1. User opens Settings.
-2. User selects English/Turkish and System/Light/Dark.
-3. App applies and persists the setting.
+2. User selects a language (System, English, or Türkçe) and an appearance (System, Light, or Dark).
+3. App applies the setting immediately, without a restart, and persists it locally. While the language is System, the app rechecks the device language whenever it returns to the foreground.
 4. User-created content remains unchanged.
 
 ### UC-13 — Lock and unlock the app

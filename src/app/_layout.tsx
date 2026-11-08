@@ -20,7 +20,8 @@ export default function RootLayout() {
           card: c.surface,
           text: c.textPrimary,
           border: c.border,
-          notification: c.accent,
+          // Badges indicate state, so they use `primary`, never the decorative accent (O-042).
+          notification: c.primary,
         },
       }}>
       <Stack screenOptions={{ headerShown: false }} />

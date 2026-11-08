@@ -27,6 +27,29 @@ describe.each(['light', 'dark'] as const)('%s theme text contrast (WCAG 4.5:1)',
   });
 });
 
+describe.each(['light', 'dark'] as const)('%s theme interactive contrast (WCAG 3:1)', (scheme) => {
+  const c = colors[scheme];
+  it.each([
+    ['primary on background', c.primary, c.background],
+    ['primary on surface', c.primary, c.surface],
+  ])('%s', (_label, fg, bg) => {
+    expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe('O-042 color roles', () => {
+  it('light theme: burgundy carries text, interactive elements, and state', () => {
+    expect(colors.light.textPrimary).toBe(palette.burgundy);
+    expect(colors.light.primary).toBe(palette.burgundy);
+  });
+
+  it.each(['light', 'dark'] as const)('%s theme: coral is never a text or interactive token', (scheme) => {
+    const { accent, textPrimary, textSecondary, primary, onPrimary } = colors[scheme];
+    expect(accent).toBe(palette.coral);
+    expect([textPrimary, textSecondary, primary, onPrimary]).not.toContain(palette.coral);
+  });
+});
+
 describe('contrastRatio', () => {
   it('returns 21 for black on white and 1 for identical colors', () => {
     expect(contrastRatio('#000000', '#FFFFFF')).toBeCloseTo(21, 5);

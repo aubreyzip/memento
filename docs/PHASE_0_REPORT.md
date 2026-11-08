@@ -181,6 +181,8 @@ The native probe in `experiments/phase-0/native-probe/` already automates G1–G
 
 ## 8. Remaining open decisions
 
+> **Update (8 November 2026, later):** O-009 (Expo SDK 58, Node 24, Android 7.0 / iOS 16.4) and O-034 (language selection) have since been confirmed; see `DECISIONS.md`. The text below is the record at Phase 0 closure.
+
 - **Needed before Phase 1:** O-009 (Expo SDK and minimum OS versions; Phase 0 used SDK 58) and O-034 (language source of truth).
 - **Needed later:**
   - Phase 2: O-005, O-006, O-014 (Proposed), O-025, O-027.

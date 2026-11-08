@@ -5,7 +5,8 @@ import { spacing } from '@/design-system/tokens';
 
 /**
  * Placeholder start screen. Phase 1 replaces it with the navigation shell (ROADMAP Phase 1).
- * The literal strings are temporary until the English/Turkish resources are set up (O-034).
+ * The literal strings are temporary: no translation resources exist yet. Phase 1 adds English and
+ * Turkish resources and the System / English / Türkçe setting (O-034).
  */
 export default function Index() {
   const c = useThemeColors();

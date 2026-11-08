@@ -4,7 +4,11 @@
  * Components must use the semantic tokens (`colors.light` / `colors.dark`), never raw hex values.
  * Source: PRD §10.2 (confirmed palette, decision D-004) and SDD §7.2 (semantic token names).
  *
- * Contrast is enforced by `__tests__/tokens.test.ts` (WCAG 2.x, 4.5:1 for text).
+ * Contrast is enforced by `__tests__/tokens.test.ts` (WCAG 2.x: 4.5:1 for text, 3:1 for
+ * interactive elements and state indicators).
+ *
+ * Color roles (O-042, confirmed): burgundy carries important text, interactive elements, and state
+ * indicators in the light theme; coral is decorative only.
  */
 
 /** The five confirmed palette colors (D-004). Do not add colors here without a decision. */
@@ -28,15 +32,16 @@ export type SemanticColors = {
   textPrimary: string;
   /** Secondary text; meets 4.5:1 on `background` and `surface`. */
   textSecondary: string;
-  /** Primary buttons and strong icons. */
+  /** Important text, interactive elements (buttons, control outlines, focus), and state indicators. */
   primary: string;
   /** Text and icons placed on `primary`. */
   onPrimary: string;
   /**
-   * Accent for emphasis and selected details. In the light theme it is below 3:1 on `background`,
-   * so it must never be the only indicator of state and must not be used for text.
+   * Decorative only (O-042). Never used for text, interactive elements, or to communicate a state,
+   * because coral on cream is 2.80:1. Any state shown near coral must also use `primary` or text.
    */
   accent: string;
+  /** Decorative dividers only. Interactive control boundaries use `primary`. */
   border: string;
 };
 

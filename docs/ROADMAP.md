@@ -45,7 +45,7 @@
 - TypeScript strict mode, lint, formatting, CI (lint, typecheck, unit and repository tests).
 - Expo Router shell: four primary areas and the quick-capture entry point as placeholders (B-008 Proposed).
 - Semantic design tokens: light final, dark provisional (O-004); System/Light/Dark setting.
-- i18n scaffolding for English and Turkish (O-034).
+- i18n scaffolding for English and Turkish, plus the System / English / Türkçe setting with immediate switching, foreground recheck, persistence, and English fallback (Confirmed O-034).
 - Settings persistence.
 - Database infrastructure: connection bootstrap, migration runner (`PRAGMA user_version`, O-016), initial schema, repository interfaces, idempotent seeds with reserved built-in IDs (O-020, O-038).
 - Encrypted database foundation: SQLCipher, fail-closed `cipher_version` check, raw-key keying, key storage, O-019 quarantine and recovery screen, O-018 exclusion on Android (config plugin) and iOS (O-039 local module) (Confirmed O-036).
@@ -54,7 +54,7 @@
 - Domain types and invariants: Inbox rule, templates, status sets.
 - Test infrastructure per O-017 (Confirmed): Node-side repository and migration tests, plus an on-device integration suite.
 
-**Needed before start:** O-009 (Expo SDK and minimum OS versions; Phase 0 used SDK 58) and O-034 (language source of truth). Also needed: access to a physical Android device, a physical iPhone, and a macOS machine or EAS account for iOS builds, for the carried-forward gates. All other Phase 1 decisions are Confirmed.
+**Decisions:** all Phase 1 decisions are Confirmed, including O-009 (SDK 58, Node 24, Android 7.0 / iOS 16.4) and O-034 (language selection). **Also needed:** access to a physical Android device, a physical iPhone, and a macOS machine or EAS account for iOS builds, for the carried-forward gates. 
 
 ### Phase 2 — Collections and categories
 
@@ -95,5 +95,5 @@
 | Phase | Status |
 |---|---|
 | 0 | **Concluded** 8 Nov 2026 (G-003). Node harness and documentation validation done; no native build completed; native validation carried forward as gates. See `PHASE_0_REPORT.md`. |
-| 1 | Next. Not started. Pre-Phase 1 scaffold cleanup done (8 Nov 2026): identifiers set, demo and web content removed, design tokens applied, TypeScript/ESLint/Jest configured. |
+| 1 | Next. Not started. Scaffold finalized (8 Nov 2026): identifiers set, demo and web content removed, design tokens with O-042 rules, TypeScript/ESLint/Jest, Node 24 pinning, CI workflow, minimum OS versions pinned. |
 | 2–6 | Not started. |

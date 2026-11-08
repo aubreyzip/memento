@@ -39,10 +39,12 @@ There is no remote account actor, administrator role, or second collaborator in 
 |---|---|---|
 | FR-001 | The app MUST show a concise first-run introduction explaining Memento's purpose and local-first storage model. | Must |
 | FR-002 | The app MUST support English and Turkish UI strings. | Must |
-| FR-003 | The app SHOULD detect the device locale on first launch and allow manual language selection in Settings. | Should |
+| FR-003 | Settings MUST offer the language options System, English, and Türkçe, with System as the default. System MUST follow the device language (O-034). | Must |
 | FR-004 | The app MUST support System, Light, and Dark appearance settings. | Must |
 | FR-005 | The app MUST persist selected language and theme across restarts. | Must |
 | FR-006 | User-created content MUST remain unchanged when the UI language changes. | Must |
+| FR-007 | A language change MUST apply immediately without restarting the app. While System is selected, the app MUST recheck the OS language each time it returns to the foreground (O-034). | Must |
+| FR-008 | Any UI string missing from the active language MUST fall back to English (O-034). | Must |
 
 ### 4.2 Collections
 
@@ -219,7 +221,7 @@ The app MUST validate status values against the selected category template. Stat
 | ID | Requirement |
 |---|---|
 | NFR-050 | The application MUST support Android and iOS using one shared TypeScript codebase. |
-| NFR-051 | Minimum OS versions MUST be selected based on the chosen Expo SDK and documented before beta release. |
+| NFR-051 | The app MUST support Android 7.0 (API 24) and later and iOS 16.4 and later, built with Expo SDK 58 and React Native 0.88.x; development and CI MUST use Node.js 24 (24.3 or newer) (O-009). |
 | NFR-052 | Expo native modules MUST use versions compatible with the installed Expo SDK. |
 | NFR-053 | Feature modules MUST keep presentation, application logic, and persistence concerns separated. |
 | NFR-054 | New dependencies MUST have a clear purpose and must not introduce unnecessary network/data collection. |
