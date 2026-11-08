@@ -39,7 +39,8 @@
             "minSdkVersion": 24
           }
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,

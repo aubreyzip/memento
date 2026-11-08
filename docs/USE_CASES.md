@@ -66,6 +66,7 @@ See [`diagrams/use-case-overview.mmd`](./diagrams/use-case-overview.mmd).
   2. App explains that the existing data cannot be opened on this device.
   3. User chooses **Restore from a Memento backup** (continues with UC-15) or **Start fresh** (creates a new empty database).
   4. The quarantined file is kept unless the user separately confirms its deletion.
+  These screens use the System appearance and language, because saved preferences are inside the unreadable database (O-044).
 
 **Postconditions:** Local settings and seeded system data exist; no account is created.
 

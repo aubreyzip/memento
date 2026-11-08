@@ -9,7 +9,7 @@
 - [ ] V1 scope matches `PRD.md` and exclusions are respected.
 - [ ] All Must requirements in `SRS.md` are implemented or formally deferred.
 - [ ] No blocker/high-severity data-loss, privacy, or security defects remain.
-- [ ] English and Turkish UI have been reviewed.
+- [ ] English and Turkish UI have been reviewed; the Turkish resource is no longer marked draft and its known-missing list is empty (Turkish tagline: O-045).
 - [ ] Light, Dark, and System appearance have been reviewed.
 - [ ] Accessibility review is complete.
 - [ ] Onboarding accurately explains local-first behavior and backup responsibility.

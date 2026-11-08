@@ -1,11 +1,7 @@
-import { useColorScheme } from 'react-native';
+import { useAppearance } from './appearance-provider';
+import type { SemanticColors } from './tokens';
 
-import { colors, type SemanticColors } from './tokens';
-
-/**
- * Semantic colors for the current OS appearance.
- * The in-app System / Light / Dark setting (B-015) is added with settings persistence in Phase 1.
- */
+/** Semantic colors for the resolved appearance (user preference, or the OS when set to System). */
 export function useThemeColors(): SemanticColors {
-  return colors[useColorScheme() === 'dark' ? 'dark' : 'light'];
+  return useAppearance().colors;
 }

@@ -43,10 +43,10 @@
 
 - Expo project initialized with the selected SDK recorded (O-009) and the permanent identifier `com.aubreyzip.memento` (O-001).
 - TypeScript strict mode, lint (ESLint), formatting (Prettier), CI on GitHub Actions (typecheck, lint, format check, unit and repository tests).
-- Expo Router shell: four primary areas and the quick-capture entry point as placeholders (B-008 Confirmed).
+- Expo Router shell: four primary areas and the quick-capture entry point as placeholders (B-008 Confirmed). Slice 4 done; tabs are text-only until O-046.
 - Semantic design tokens: light final, dark provisional (O-004); System/Light/Dark setting.
-- i18n scaffolding for English and Turkish, plus the System / English / Türkçe setting with immediate switching, foreground recheck, persistence, and English fallback (Confirmed O-034).
-- Settings persistence.
+- i18n scaffolding for English and Turkish, plus the System / English / Türkçe setting with immediate switching, foreground recheck, persistence, and English fallback (Confirmed O-034). Slice 3 done; persistence arrives with slice 5.
+- Settings persistence: `SettingsRepository` interface with an interim in-memory implementation (slice 2, done), SQLite implementation on `app_settings` in slice 5 (O-044).
 - Database infrastructure: connection bootstrap, migration runner (`PRAGMA user_version`, O-016), initial core schema per O-043 (`app_settings`, `collection_types`, `categories`, `collections`, core `entries` columns), repository interfaces, idempotent seeds with reserved built-in IDs (O-020, O-038).
 - Encrypted database foundation: SQLCipher, fail-closed `cipher_version` check, raw-key keying, key storage, O-019 quarantine and recovery screen, O-018 exclusion on Android (config plugin) and iOS (O-039 local module) (Confirmed O-036).
 - **Phase 0 carry-forward gates (G-003)**, before any build stores real data: verify the items in `PHASE_0_REPORT.md` §7 for Phase 1 on a physical Android device and a physical iPhone.

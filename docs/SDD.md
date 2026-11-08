@@ -53,7 +53,7 @@ See [`diagrams/system-context.mmd`](./diagrams/system-context.mmd) and [`diagram
 | Symmetric encryption | `expo-crypto` AES-GCM | Proposed. Candidate for attachment (O-008) and backup-member (O-007) encryption; it provides no password KDF. |
 | Notifications | Expo Notifications | Local scheduling only. |
 | Localization | i18next + Expo Localization | Confirmed. English and Turkish; behavior per O-034 (§7.3). |
-| Unit/component tests | Jest (`jest-expo` preset) + React Native Testing Library | Pure logic and component behavior. Jest and `jest-expo` are installed (O-017); React Native Testing Library is added with the first component test. |
+| Unit/component tests | Jest (`jest-expo` preset) + React Native Testing Library | Pure logic and component behavior. Jest and `jest-expo` are installed (O-017); React Native Testing Library 14 (Confirmed) is installed with its `test-renderer` peer; component tests live next to the components in `__tests__/`. |
 | Lint | ESLint 9 with `eslint-config-expo` (flat config) | Confirmed. |
 | Formatter | Prettier + `eslint-config-prettier` | Confirmed. Code and config files only; Markdown docs are excluded. |
 | E2E | Maestro | Critical native flows on Android/iOS. |
@@ -174,6 +174,8 @@ Confirmed (B-008):
 
 Quick Add is a global prominent action, not a separate primary tab. Collection detail, entry detail, editors, category management, and backup flows are nested routes or modals.
 
+**Implementation (Phase 1 slice 4):** `src/app/_layout.tsx` is a stack holding `(tabs)` and the `capture` modal. `src/app/(tabs)/_layout.tsx` defines the four tabs (`index`, `collections`, `search`, `settings`) with translated labels; Quick Add is a `+` button in every tab header (accessible name "Quick Add") that opens `/capture`. Tabs are text-only until O-046 picks an icon set; the selected tab is shown by weight and underline as well as color (O-042). Home, Collections, Search, and Capture are placeholders; Settings holds the appearance and language settings. Routes are thin and render components from `src/components` and `src/features`.
+
 ### 7.2 Design system
 
 Create semantic theme tokens such as:
@@ -196,9 +198,12 @@ Dark theme should use a dark plum/burgundy-tinted neutral background and accessi
 
 **Implementation:** `src/design-system/tokens.ts` defines the palette and the semantic tokens `background`, `surface`, `highlight`, `textPrimary`, `textSecondary`, `primary`, `onPrimary`, `accent`, and `border`. Light values come from the palette; `textSecondary` is burgundy blended 80% over cream (`#7D5364`). Dark values are provisional (O-004). Status and priority tokens are not defined yet, because their colors have not been designed. `__tests__/tokens.test.ts` enforces 4.5:1 text contrast. Color roles (Confirmed O-042): burgundy (`primary`, `textPrimary`) carries important text, interactive elements, and state indicators; coral (`accent`) is decorative only, because coral on cream is 2.80:1; `border` is for decorative dividers, and control boundaries use `primary`. Tests enforce 4.5:1 for text, 3:1 for `primary` on backgrounds, and that coral is never a text or interactive token. The dark-theme counterpart of the burgundy role is part of O-004.
 
+**Appearance setting (FR-004):** the preference (`system` | `light` | `dark`, default `system`) is a typed setting in `src/domain/settings.ts`. `AppearanceController` (`src/features/settings/`) loads and saves it through `SettingsRepository`, applies changes immediately, and restores the previous value if saving fails. `AppearanceProvider` (`src/design-system/`) resolves the preference against the OS scheme (`resolveColorScheme`: System follows the OS, light when the OS reports none) and supplies the semantic colors; the root layout maps them onto the navigation theme and the status bar. Native system UI follows the OS scheme until an app-level override is added.
+
 ### 7.3 Localization
 
 - Language setting (Confirmed O-034): System (default), English, Türkçe. System follows the device language. Apply changes immediately without restart; while System is selected, re-read the OS locale when the app returns to the foreground (`AppState`). Persist the selection locally. Missing keys fall back to English. Expo Localization (SDK 58) provides `getLocales()` and the `supportedLocales` config-plugin option for per-app language in the OS settings; its docs recommend re-reading locales on foreground because Android can change locale without restarting the app.
+- **Implementation (Phase 1 slice 3):** resources in `src/localization/resources/`; English defines the keys (typed `TranslationKey`), Turkish is a partial, draft resource. `resolveLanguage` maps preference + device primary language to `en`/`tr` (unsupported → English). `LocalizationProvider` binds a translator per language (`getFixedT`), so switching is immediate; the device language is an external store re-read on every foreground (`device-language-store.ts`). Language names are shown in their own language (English, Türkçe). The `supportedLocales` per-app OS language option is not enabled; System follows the device language as O-034 states.
 - Keep all UI strings in translation resources (`en`, `tr`).
 - Store user-created names/descriptions exactly as entered.
 - Format dates, numbers, and currencies using locale-aware APIs.
@@ -247,7 +252,7 @@ Keys: one database key and one media key, each 32 random bytes from a CSPRNG, st
 1. **Restore from a Memento backup.** Runs the normal import flow (UC-15) into a new database.
 2. **Start fresh.** Creates a new, empty database. The quarantined file is kept. Deleting it requires a separate, explicit confirmation, offered on this screen and in Settings → Data Management.
 
-Startup must reach the recovery screen without touching user content. The SQLCipher availability check (`cipher_version`) runs before any of these states and fails closed.
+Startup must reach the recovery screen without touching user content. Screens shown before the database opens (splash, cipher-unavailable error, recovery) use the System appearance and System language with English fallback, because preferences live in the encrypted `app_settings` table (Confirmed O-044). The SQLCipher availability check (`cipher_version`) runs before any of these states and fails closed.
 
 ### 8.2 Repository boundaries
 
@@ -258,7 +263,7 @@ Suggested repositories:
 - `EntryRepository`
 - `TagRepository`
 - `ReminderRepository`
-- `SettingsRepository`
+- `SettingsRepository` — typed get/set over `app_settings`. Implemented now as `InMemorySettingsRepository` (interim, resets on restart, O-044); the SQLite implementation arrives with the database in Phase 1 slice 5 and must pass the shared contract tests in `src/repositories/testing/`.
 
 Repositories expose typed operations, not arbitrary SQL to UI code. Multi-table operations should use a transaction in the application/service layer or repository unit-of-work helper.
 

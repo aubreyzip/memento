@@ -15,7 +15,7 @@ Verify that Memento is reliable, private, usable offline, and safe to release on
 | Static | Catch type and style issues | TypeScript (`npm run typecheck`), ESLint with `eslint-config-expo` (`npm run lint`, which runs `expo lint`; on Node < 22.13 run `npx eslint .`), Prettier (`npm run format:check`) |
 | Unit | Domain rules and pure functions | Jest with the `jest-expo` preset (installed). Tests live next to the code in `__tests__/`; `experiments/` is excluded. Run with `npm test`. |
 | Repository/integration | SQLite queries, migrations, transactions | Plain-SQL repositories (Confirmed O-016). Test approach Confirmed (O-017): Jest on a Node SQLite driver running the same migration SQL files, plus an on-device suite for SQLCipher. Phase 0 finding: `better-sqlite3` 13 requires Node ≥ 22 (satisfied by the Node 24 baseline, O-009); `sql.js` (WebAssembly) also works. Node is pinned to 24 locally and in CI. |
-| Component | Forms, states, accessibility behavior | React Native Testing Library |
+| Component | Forms, states, accessibility behavior | React Native Testing Library 14 (Confirmed; async `render`/`fireEvent`, built-in matchers such as `toBeSelected`). Navigation is tested with `expo-router/testing-library` `renderRouter` against the real `src/app` tree (tests live outside `src/app` so they are not routes). Native header titles are not rendered as text in Jest. |
 | End-to-end | Native user journeys and OS integrations | Maestro |
 | Manual | Visual quality, permissions, backup transfer, biometric behavior | Real Android/iOS devices |
 | Release | Build/signing/store validation | EAS Build, Play Console, App Store Connect |
@@ -86,7 +86,7 @@ Exact tooling versions must be selected to match the installed Expo SDK.
 | T-001 | First launch with English device locale | English onboarding appears; no account is requested. |
 | T-002 | First launch with Turkish device locale | Language setting is System and the UI is Turkish. |
 | T-003 | Change language after creating entries | UI labels change; user-created text is unchanged. |
-| T-004 | Switch System/Light/Dark | Theme updates and persists after restart. |
+| T-004 | Switch System/Light/Dark | Theme updates immediately and persists after restart. Persistence is testable from Phase 1 slice 5 (interim in-memory settings until then, O-044). |
 | T-005 | Create Person, Space, Project, Event, General collections | All types are selectable and saved. |
 | T-006 | Create a custom collection type | It appears in collection creation and persists. |
 | T-007 | Create a custom category using each template | Category fields/status behavior match its template. |
@@ -115,7 +115,8 @@ Exact tooling versions must be selected to match the installed Expo SDK.
 | T-030 | Switch language System → English → Türkçe → System in Settings | Each change applies immediately without restart; the choice persists after restart (O-034). |
 | T-031 | With System selected, change the device language and return to the app | The app follows the new device language on foreground. With English or Türkçe selected, it does not change. |
 | T-032 | Device language other than English or Turkish, with System selected | UI shows English. |
-| T-033 | A key missing from the Turkish resources | That string falls back to English; no raw key or blank text is shown. |
+| T-033 | A key missing from the Turkish resources | That string falls back to English; no raw key or blank text is shown. Automated: unit tests require every missing Turkish key to be listed explicitly (currently only the tagline, O-045). |
+| T-034 | Recovery screen or SQLCipher error screen | Uses the System appearance and language regardless of the saved preference (O-044). |
 
 ## 7. Security tests
 
