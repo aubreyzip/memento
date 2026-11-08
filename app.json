@@ -20,7 +20,14 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "allowBackup": false,
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.VIBRATE"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -47,7 +54,14 @@
           "useSQLCipher": true
         }
       ],
-      "expo-secure-store"
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": false,
+          "faceIDPermission": false
+        }
+      ],
+      "./plugins/with-no-os-backup"
     ],
     "experiments": {
       "typedRoutes": true,
