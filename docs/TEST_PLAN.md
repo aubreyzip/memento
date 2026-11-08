@@ -12,8 +12,8 @@ Verify that Memento is reliable, private, usable offline, and safe to release on
 
 | Level | Purpose | Candidate tools |
 |---|---|---|
-| Static | Catch type and style issues | TypeScript, ESLint, formatter |
-| Unit | Domain rules and pure functions | Jest |
+| Static | Catch type and style issues | TypeScript (`npm run typecheck`), ESLint with `eslint-config-expo` (`npm run lint`, which runs `expo lint`; on Node < 22.13 run `npx eslint .`), formatter not yet chosen |
+| Unit | Domain rules and pure functions | Jest with the `jest-expo` preset (installed). Tests live next to the code in `__tests__/`; `experiments/` is excluded. Run with `npm test`. |
 | Repository/integration | SQLite queries, migrations, transactions | Plain-SQL repositories (Confirmed O-016). Test approach Confirmed (O-017): Jest on a Node SQLite driver running the same migration SQL files, plus an on-device suite for SQLCipher. Phase 0 finding: `better-sqlite3` 13 requires Node ≥ 22; `sql.js` (WebAssembly) works on Node 20. Pin the Node version in CI. |
 | Component | Forms, states, accessibility behavior | React Native Testing Library |
 | End-to-end | Native user journeys and OS integrations | Maestro |

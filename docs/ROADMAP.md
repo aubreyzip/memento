@@ -95,5 +95,5 @@
 | Phase | Status |
 |---|---|
 | 0 | **Concluded** 8 Nov 2026 (G-003). Node harness and documentation validation done; no native build completed; native validation carried forward as gates. See `PHASE_0_REPORT.md`. |
-| 1 | Next. Not started. |
+| 1 | Next. Not started. Pre-Phase 1 scaffold cleanup done (8 Nov 2026): identifiers set, demo and web content removed, design tokens applied, TypeScript/ESLint/Jest configured. |
 | 2–6 | Not started. |

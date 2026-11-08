@@ -61,7 +61,9 @@ Whenever a product or architecture decision is made or changes:
 
 ## Architecture rules
 
-- Use React Native with Expo and TypeScript. Use Expo Router for navigation.
+- Use React Native with Expo and TypeScript. Use Expo Router for navigation; routes live in `src/app/`. V1 is mobile only: do not add web dependencies, web config, or `.web.tsx` files.
+- Colors come only from `src/design-system/tokens.ts` semantic tokens; keep the token contrast tests passing.
+- Checks before declaring work done: `npm run typecheck`, `npm run lint`, `npm test`.
 - Keep routes thin. Screens orchestrate feature components and application actions; they should not contain SQL statements.
 - Keep persistence behind repository interfaces. UI components must not access SQLite directly.
 - Data access is plain, parameterized SQL through `expo-sqlite` inside repositories; no ORM in V1 (O-016). Migrations are numbered SQL files tracked with `PRAGMA user_version`. Never build SQL by concatenating user input.

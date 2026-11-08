@@ -38,7 +38,7 @@ See [`diagrams/system-context.mmd`](./diagrams/system-context.mmd) and [`diagram
 
 | Concern | Proposed technology | Notes |
 |---|---|---|
-| Mobile runtime | React Native + Expo | Shared Android/iOS app. |
+| Mobile runtime | React Native + Expo | Shared Android/iOS app. Mobile only: no web target in V1 (web dependencies and config removed). Expo SDK 58 (React Native 0.88) is installed; formal SDK and minimum OS selection is O-009. Expo SDK 58 requires Node ≥ 22.13. |
 | Language | TypeScript | Strict type checking. |
 | Navigation | Expo Router | File-based routes. |
 | Database | `expo-sqlite` | Persistent local SQLite. |
@@ -53,7 +53,8 @@ See [`diagrams/system-context.mmd`](./diagrams/system-context.mmd) and [`diagram
 | Symmetric encryption | `expo-crypto` AES-GCM | Proposed. Candidate for attachment (O-008) and backup-member (O-007) encryption; it provides no password KDF. |
 | Notifications | Expo Notifications | Local scheduling only. |
 | Localization | i18next plus Expo-compatible locale detection | English and Turkish. |
-| Unit/component tests | Jest + React Native Testing Library | Pure logic and component behavior. |
+| Unit/component tests | Jest (`jest-expo` preset) + React Native Testing Library | Pure logic and component behavior. Jest and `jest-expo` are installed (O-017); React Native Testing Library is added with the first component test. |
+| Lint | ESLint 9 with `eslint-config-expo` (flat config) | Proposed. Installed to provide the lint step required by `CLAUDE.md`. |
 | E2E | Maestro | Critical native flows on Android/iOS. |
 | CI | GitHub Actions | Lint, typecheck, tests, build validation as feasible. |
 | Build/submit | EAS Build / EAS Submit | Store-oriented build pipeline. |
@@ -109,17 +110,17 @@ Responsibilities:
 
 ```text
 memento/
-├── app/                         # Expo Router routes and layouts
-│   ├── (tabs)/
-│   │   ├── index.tsx             # Home
-│   │   ├── collections.tsx
-│   │   ├── search.tsx
-│   │   └── settings.tsx
-│   ├── collections/[collectionId]/
-│   ├── entries/[entryId]/
-│   ├── capture.tsx
-│   └── _layout.tsx
 ├── src/
+│   ├── app/                     # Expo Router routes and layouts (Expo SDK 58 template convention)
+│   │   ├── (tabs)/
+│   │   │   ├── index.tsx         # Home
+│   │   │   ├── collections.tsx
+│   │   │   ├── search.tsx
+│   │   │   └── settings.tsx
+│   │   ├── collections/[collectionId]/
+│   │   ├── entries/[entryId]/
+│   │   ├── capture.tsx
+│   │   └── _layout.tsx
 │   ├── components/              # Shared UI components
 │   ├── design-system/           # Tokens, typography, spacing, themes
 │   ├── features/
@@ -146,15 +147,18 @@ memento/
 │   └── types/
 ├── assets/
 ├── docs/
-├── tests/
+├── experiments/                 # Isolated phase experiments (Phase 0); excluded from typecheck, lint, and tests
 ├── .github/workflows/
-├── app.config.ts
+├── app.json                     # app.config.ts only if dynamic config becomes necessary
 ├── eas.json
+├── eslint.config.js
 ├── package.json
 └── README.md
 ```
 
 This is a target structure, not a requirement to create empty folders. Adjust based on the actual Expo template and avoid unnecessary indirection.
+
+Current state (8 November 2026, before Phase 1): routes live in `src/app/` (only a placeholder `_layout.tsx` and `index.tsx`); design tokens are in `src/design-system/`; tests sit next to the code they test in `__tests__/` folders rather than in a top-level `tests/` folder.
 
 ## 7. Navigation and UI architecture
 
@@ -186,6 +190,8 @@ Light palette source values:
 - Cream `#FFF9EC`
 
 Dark theme should use a dark plum/burgundy-tinted neutral background and accessible foregrounds. Exact values must be validated and documented in the design tokens; do not assume the light palette can simply be inverted.
+
+**Implementation:** `src/design-system/tokens.ts` defines the palette and the semantic tokens `background`, `surface`, `highlight`, `textPrimary`, `textSecondary`, `primary`, `onPrimary`, `accent`, and `border`. Light values come from the palette; `textSecondary` is burgundy blended 80% over cream (`#7D5364`). Dark values are provisional (O-004). Status and priority tokens are not defined yet, because their colors have not been designed. `__tests__/tokens.test.ts` enforces 4.5:1 text contrast. Coral on cream is 2.80:1, so coral is never used for text or as the only indicator of state (O-042).
 
 ### 7.3 Localization
 

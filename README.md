@@ -10,8 +10,22 @@ Memento is a private, offline-first personal information organizer for rememberi
 - **Implementation status:** Phase 0 concluded; Phase 1 (project foundation) is next. Product implementation not started. See [`docs/ROADMAP.md`](./docs/ROADMAP.md).
 - **Application identifier:** `com.aubreyzip.memento` (Android and iOS)
 - **Platforms:** Android and iOS
-- **Primary stack:** React Native, Expo, TypeScript, SQLite
+- **Primary stack:** React Native 0.88, Expo SDK 58, Expo Router, TypeScript (strict), SQLite (planned). Mobile only, no web target.
 - **V1 model:** Single-user, local-first, no application backend, no account system, no cloud sync
+
+## Development
+
+Prerequisites: Node.js **22.13 or newer** (required by Expo SDK 58), npm, and for native builds the Android SDK or Xcode. Install with `npm install`.
+
+| Command | Purpose |
+|---|---|
+| `npm start` | Start the Expo dev server |
+| `npm run android` / `npm run ios` | Start the dev server and open Android or iOS |
+| `npm run typecheck` | TypeScript check (`tsc --noEmit`) |
+| `npm run lint` | ESLint via `expo lint` |
+| `npm test` | Jest unit tests |
+
+Once SQLCipher and other native modules are added in Phase 1, Expo Go no longer works; use a development build (`npx expo run:android` / `npx expo run:ios`, or EAS Build).
 
 ## Read before implementing
 
