@@ -59,8 +59,6 @@ function plainSqliteEnv(dir: string, options: { reportsCipher: boolean }) {
 
   const files: DatabaseFiles = {
     exists: async () => fs.existsSync(full(name)) && fs.statSync(full(name)).size > 0,
-    snapshot: async () => [],
-    discardSnapshot: async () => {},
     quarantine: async (stamp) => {
       const moved: string[] = [];
       for (const suffix of ['', '-wal', '-shm', '-journal']) {
@@ -176,7 +174,7 @@ describe('runDeviceChecks', () => {
       'no-key-rejected',
       'wrong-key-rejected',
       'state-d-wrong-key',
-      'state-d-wal-preserved',
+      'state-d-wal-recoverable',
     ]) {
       expect([id, ok[id]]).toEqual([id, false]);
     }

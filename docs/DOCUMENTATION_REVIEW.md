@@ -1,5 +1,7 @@
 # Documentation Review — Memento (Pre-Phase 1)
 
+> **Frozen record (9 November 2026, G-004).** Kept for history; do not edit. Current decisions are in [`DECISIONS.md`](./DECISIONS.md).
+
 **Review date:** 8 November 2026  
 **Documentation baseline reviewed:** 0.1 (commit `bcba822`)  
 **Reviewer role:** Senior software architect / product-minded technical reviewer  

@@ -244,12 +244,12 @@ Keys: one database key and one media key, each 32 random bytes from a CSPRNG, st
 | A. No database file, no key | File absent; SecureStore returns null | Generate key, store it, create and key the database, run migrations and seeds. |
 | B. Database and key, opens | First read (`SELECT count(*) FROM sqlite_master`) succeeds after keying | Normal startup. |
 | C. Database file, key missing | File present; SecureStore returns null | Close; quarantine; show recovery screen. |
-| D. Database file, wrong key | First read after keying fails (SQLCipher reports the file is not a database) | Close; quarantine (the pre-open snapshot when there is one, O-051); show recovery screen. |
+| D. Database file, wrong key | First read after keying fails (SQLCipher reports the file is not a database) | Close; quarantine; show recovery screen. |
 | E. Key present, no database file | File absent; key present | Create a new database. Reusing the existing key or generating a new one are both safe. |
 
 **Quarantine:** close every connection, then move the database file and any `-wal`, `-shm`, or `-journal` sidecar to `<name>.quarantine-<timestamp>` in the same directory. Moving within one directory is a rename, so file contents should be unchanged; verify byte equality in the Phase 1 on-device test (not verified in Phase 0). Never delete as part of quarantine.
 
-**Leftover WAL (O-051).** Opening a WAL database with a wrong key can checkpoint the WAL into the main file when that connection closes, and SQLite then deletes `-wal`/`-shm` (seen on the emulator). `expo-sqlite` cannot open read-only, so before an existing database is opened (states B and D), startup copies the database and sidecars to `<name>.pre-open-<timestamp>` if a non-empty `-wal` exists. On a mismatch the copies are quarantined under the `.quarantine-<timestamp>` names and the opened files are kept as `.quarantine-<timestamp>.after-key-check`; otherwise the copies are deleted. If the copy fails, nothing is opened and the "could not open" error is shown.
+**Leftover WAL (O-051).** Opening a WAL database with a wrong key can checkpoint the WAL into the main file when that connection closes, and SQLite then deletes `-wal`/`-shm` (seen on the emulator). `expo-sqlite` cannot open read-only. This is accepted (O-051 option c): whatever the key check leaves is quarantined, so the main file may differ in bytes from before, but its content is intact and opens with the original key. Nothing is copied before the key check, and nothing is deleted.
 
 **Recovery screen** (UC-01): explains that the existing data cannot be opened on this device and offers:
 

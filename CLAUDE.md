@@ -11,13 +11,13 @@ Before making a change, read:
 - `docs/DATABASE_DESIGN.md` for any persistence change
 - `docs/TEST_PLAN.md` for required verification
 
-The documentation is the project source of truth. If implementation and documentation disagree, do not guess: identify the discrepancy and propose the smallest consistent correction. Product-owner-confirmed decisions take precedence over recommendations.
+The documentation is the project source of truth. If implementation and documentation disagree, do not guess: identify the discrepancy and propose the smallest consistent correction. Product-owner-confirmed decisions take precedence over recommendations. If a document disagrees with a newer Confirmed decision in `docs/DECISIONS.md`, the decision wins; note the mismatch for the phase-end reconciliation (G-004) rather than fixing it mid-phase.
 
-`docs/DOCUMENTATION_REVIEW.md` records the pre-Phase 1 review, the findings, and the Phase 1 entry checklist.
+`docs/DOCUMENTATION_REVIEW.md` is a frozen record of the pre-Phase 1 review. `docs/PHASE_0_REPORT.md` is frozen too, except its §7 gate-status table.
 
 ## Phases
 
-Development follows the seven confirmed phases in `docs/ROADMAP.md` (decision O-015):
+Development follows the seven phases in `docs/ROADMAP.md` (O-015, amended by O-053: Phases 2 and 3 run as one combined phase with a single exit evaluation):
 
 0. Technical validation and proofs of concept
 1. Project foundation and infrastructure
@@ -41,7 +41,7 @@ Work on one phase at a time. Do not start a phase until the previous one has bee
 Whenever a product or architecture decision is made or changes:
 
 1. Update `docs/DECISIONS.md` first: add or update the ID, status, date, and source.
-2. Update every affected document in the same change (PRD, SRS, SDD, DATABASE_DESIGN, USE_CASES, TEST_PLAN, RELEASE_CHECKLIST, diagrams, README, and this file), and remove or correct outdated statements.
+2. In the same change, update only `docs/ROADMAP.md` (status line, if the phase status changes) and this file (if a rule here changes). Reconcile the other documents (PRD, SRS, SDD, DATABASE_DESIGN, USE_CASES, TEST_PLAN, RELEASE_CHECKLIST, diagrams, README) once, at the phase exit evaluation (G-004). Documentation for code changed in the same change may be updated with it.
 3. Mark replaced decisions **Superseded** and point to the replacement; never delete decision history.
 4. Never silently promote a Proposed or Open item to Confirmed. Only the product owner confirms decisions.
 5. Implementation follows the latest Confirmed decision. Before starting a slice, check its "Needed by" items in `DECISIONS.md`; if a blocking item is still Open or Proposed, stop and ask.
@@ -106,7 +106,7 @@ Whenever a product or architecture decision is made or changes:
 4. Run relevant tests, type checks, lint, and platform/build checks available in the repository.
 5. For database work, test migration from the previous schema and verify data preservation.
 6. For security-sensitive work, test both success and failure paths; do not infer security from configuration alone.
-7. Update affected documentation and `docs/DECISIONS.md` when a decision is approved or a documented behavior changes, following the decision-management workflow above.
+7. Update `docs/DECISIONS.md` when a decision is approved or a documented behavior changes, following the decision-management workflow above (other documents at the phase exit, G-004).
 8. Report files changed, behavior delivered, tests run and their actual outcomes, known limitations, and the next logical step.
 
 ## Scope control

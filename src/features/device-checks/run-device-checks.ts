@@ -72,8 +72,8 @@ export const allPassed = (results: readonly DeviceCheckResult[]) =>
 
 class CheckFailed extends Error {}
 
-/** Matches the quarantined original of one file, not an `.after-key-check` copy (O-051). */
-const isQuarantinedOriginal = (suffix: string) => (name: string) =>
+/** Matches the quarantined copy of one file (main, `-wal`, ...) by its suffix. */
+const isQuarantinedFile = (suffix: string) => (name: string) =>
   new RegExp(`\\.db${suffix}\\.quarantine-[^.]+$`).test(name);
 
 function expectThat(condition: unknown, message: string): asserts condition {
@@ -326,7 +326,7 @@ export async function runDeviceChecks(env: DeviceCheckEnv): Promise<DeviceCheckR
     await check('state-d-wrong-key', 'G3', async () => {
       const result = await startRecovery(memoryKeyStore(generateDatabaseKey(env.randomBytes)));
       expectThat(result.reason === 'key-mismatch', `reason=${result.reason}`);
-      quarantinedMain = result.quarantined.find(isQuarantinedOriginal('')) ?? '';
+      quarantinedMain = result.quarantined.find(isQuarantinedFile('')) ?? '';
       expectThat(quarantinedMain, 'the main file is not in the quarantine list');
       expectThat(!(await env.files.exists()), 'a database is still at the original name');
       return `recovery (key-mismatch); moved: ${result.quarantined.join(', ')}`;
@@ -375,7 +375,7 @@ export async function runDeviceChecks(env: DeviceCheckEnv): Promise<DeviceCheckR
     });
 
     // --- O-051: state D with a leftover, uncheckpointed WAL (as after the app is killed). ---
-    await check('state-d-wal-preserved', 'G3', async () => {
+    await check('state-d-wal-recoverable', 'G3', async () => {
       await env.removeCheckFiles();
       const name = env.databaseName;
       const staged = `${name}.staged`;
@@ -398,18 +398,16 @@ export async function runDeviceChecks(env: DeviceCheckEnv): Promise<DeviceCheckR
 
       const result = await startRecovery(memoryKeyStore(generateDatabaseKey(env.randomBytes)));
       expectThat(result.reason === 'key-mismatch', `reason=${result.reason}`);
-      const main = result.quarantined.find(isQuarantinedOriginal(''));
-      const wal = result.quarantined.find(isQuarantinedOriginal('-wal'));
-      expectThat(main && wal, `originals missing from: ${result.quarantined.join(', ')}`);
-      const keptMain = await env.readFile(main);
-      const keptWal = await env.readFile(wal);
-      expectThat(keptMain && bytesEqual(originalMain, keptMain), 'quarantined main file differs');
-      expectThat(keptWal && bytesEqual(originalWal, keptWal), 'quarantined WAL differs');
+      const main = result.quarantined.find(isQuarantinedFile(''));
+      expectThat(main, `main file missing from: ${result.quarantined.join(', ')}`);
+      // The key check may have checkpointed the WAL into the main file (O-051 option c), so the
+      // bytes can differ; what matters is that nothing is lost.
+      const wal = result.quarantined.find(isQuarantinedFile('-wal'));
 
-      // Recoverable: under paired names the originals open with the original key, including the
-      // change that existed only in the WAL.
+      // Recoverable: under paired names the quarantined files open with the original key,
+      // including the change that existed only in the WAL.
       await env.replaceFile(main, `${name}.recovered`);
-      await env.replaceFile(wal, `${name}.recovered-wal`);
+      if (wal) await env.replaceFile(wal, `${name}.recovered-wal`);
       const raw = await track(`${name}.recovered`);
       try {
         await raw.exec(keyPragma((await key.get()) ?? ''));
@@ -418,7 +416,7 @@ export async function runDeviceChecks(env: DeviceCheckEnv): Promise<DeviceCheckR
       } finally {
         await close(raw);
       }
-      return `main and WAL kept byte-for-byte (${keptMain.length} + ${keptWal.length} bytes); WAL-only change recoverable`;
+      return `quarantined: ${result.quarantined.join(', ')}; WAL-only change recoverable with the original key`;
     });
 
     return results;

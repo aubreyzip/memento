@@ -205,60 +205,6 @@ describe('openEncryptedDatabase (O-019, SDD §8.1.1)', () => {
     });
   });
 
-  describe('pre-open snapshot of a leftover WAL (O-051)', () => {
-    const STAMP = '2026-11-08T12-00-00-000Z';
-
-    it('state D: snapshots before the key check opens the file, then quarantines it', async () => {
-      await installWithData(storage);
-      storage.storedKey = WRONG_KEY;
-      storage.walPending = true;
-      storage.events.length = 0;
-
-      const result = await openEncryptedDatabase(storage.dependencies());
-
-      expect(result).toMatchObject({ status: 'recovery', reason: 'key-mismatch' });
-      // The snapshot is taken before any connection; the quarantine (which moves the snapshot
-      // into the quarantine names) uses the same stamp; the snapshot is not discarded.
-      expect(storage.events).toEqual([`snapshot ${STAMP}`, 'connect', `quarantine ${STAMP}`]);
-    });
-
-    it('state B: discards the snapshot once the key opens the database', async () => {
-      await installWithData(storage);
-      storage.walPending = true;
-      storage.events.length = 0;
-
-      const result = await openEncryptedDatabase(storage.dependencies());
-
-      expect(result).toMatchObject({ status: 'ready', firstRun: false });
-      expect(storage.events).toEqual([`snapshot ${STAMP}`, 'connect', `discard ${STAMP}`]);
-    });
-
-    it('does not snapshot when there is no file (states A and E) or nothing is opened (C)', async () => {
-      await openEncryptedDatabase(storage.dependencies()); // A
-      expect(storage.events.filter((e) => e.startsWith('snapshot'))).toEqual([]);
-
-      const c = new FakeEncryptedStorage();
-      await installWithData(c);
-      c.storedKey = null;
-      c.events.length = 0;
-      await openEncryptedDatabase(c.dependencies());
-      expect(c.events).toEqual([`quarantine ${STAMP}`]);
-    });
-
-    it('fails closed without opening anything when the snapshot cannot be taken', async () => {
-      await installWithData(storage);
-      storage.snapshotError = new Error('no space left on device');
-      storage.events.length = 0;
-
-      const result = await openEncryptedDatabase(storage.dependencies());
-
-      expect(result).toEqual({ status: 'error', reason: 'open-failed' });
-      expect(storage.events).toEqual([`discard ${STAMP}`]);
-      expect(storage.quarantined).toHaveLength(0);
-      expect(storage.file!.hasData).toBe(true);
-    });
-  });
-
   it('refuses a broken random source instead of creating a predictable key', async () => {
     const result = await openEncryptedDatabase(storage.dependencies((n) => new Uint8Array(n)));
     expect(result).toEqual({ status: 'error', reason: 'open-failed' });
