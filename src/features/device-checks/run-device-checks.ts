@@ -141,22 +141,32 @@ export async function runDeviceChecks(env: DeviceCheckEnv): Promise<DeviceCheckR
     now: env.now,
   });
 
-  const startReady = async (keyStore: DatabaseKeyStore, firstRun: boolean) => {
+  /**
+   * The state machine closes the connections it does not return, so forget those it opened —
+   * only those: connections from earlier, failed checks stay tracked and are closed at the end.
+   */
+  const start = async (keyStore: DatabaseKeyStore) => {
+    const before = new Set(open);
     const result = await openEncryptedDatabase(deps(keyStore));
+    for (const db of open) {
+      if (!before.has(db) && (result.status !== 'ready' || db !== result.db)) open.delete(db);
+    }
+    return result;
+  };
+
+  const startReady = async (keyStore: DatabaseKeyStore, firstRun: boolean) => {
+    const result = await start(keyStore);
     if (result.status !== 'ready') {
       throw new CheckFailed(`expected ready, got ${result.status} (${result.reason})`);
     }
-    // The state machine closes failed connections itself; forget the ones it closed.
-    for (const db of open) if (db !== result.db) open.delete(db);
     expectThat(result.firstRun === firstRun, `expected firstRun=${firstRun}`);
     return result.db;
   };
 
   const startRecovery = async (keyStore: DatabaseKeyStore) => {
-    const result = await openEncryptedDatabase(deps(keyStore));
-    open.clear(); // Recovery closes its connection before quarantining.
+    const result = await start(keyStore);
     if (result.status !== 'recovery') {
-      if (result.status === 'ready') await quietly(() => result.db.close());
+      if (result.status === 'ready') await quietly(() => close(result.db));
       throw new CheckFailed(`expected recovery, got ${result.status}`);
     }
     return result;
