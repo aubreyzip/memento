@@ -54,14 +54,14 @@ Whenever a product or architecture decision is made or changes:
 - V1 supports built-in and user-defined categories. A category uses one of the supported entry templates; do not build an arbitrary form builder.
 - Entries normally belong to one collection and one category. Unsorted Quick Capture Inbox entries are the deliberate exception.
 - V1 is single-user and local-first: no account, backend, cloud sync, collaboration, ads, subscriptions, or third-party analytics.
-- V1 supports Android and iOS, English and Turkish, and System/Light/Dark appearance.
+- V1 is Android only (O-054), with English and Turkish and System/Light/Dark appearance. Do not add iOS code, config, native modules, or dependencies.
 - Use the approved five-color palette and semantic design tokens; do not scatter raw color literals through components.
 - Photos and other attachments are local data and must be included in backup/restore behavior.
 - Do not send user-created content to remote services. Do not log entry titles, descriptions, links, location details, or image paths.
 
 ## Architecture rules
 
-- Technical baseline (O-009): Expo SDK 58, React Native 0.88.x, Node.js 24 (≥ 24.3) locally and in CI, Android 7.0 (API 24)+, iOS 16.4+. Keep `.nvmrc`, `package.json` `engines`, CI, and the deployment targets in `app.json` aligned when any of these changes.
+- Technical baseline (O-009): Expo SDK 58, React Native 0.88.x, Node.js 24 (≥ 24.3) locally and in CI, Android 7.0 (API 24)+. Keep `.nvmrc`, `package.json` `engines`, CI, and `minSdkVersion` in `app.json` aligned when any of these changes.
 - Coral is decorative only; burgundy carries important text, interactive elements, and state indicators; never show a state through coral alone (O-042).
 - Use React Native with Expo and TypeScript. Use Expo Router for navigation; routes live in `src/app/`. V1 is mobile only: do not add web dependencies, web config, or `.web.tsx` files.
 - Colors come only from `src/design-system/tokens.ts` semantic tokens; keep the token contrast tests passing.
@@ -72,7 +72,7 @@ Whenever a product or architecture decision is made or changes:
 - Use `withTransactionAsync()` on the keyed, configured connection. `withExclusiveTransactionAsync()` opens a separate connection that does not inherit `PRAGMA key` or `PRAGMA foreign_keys`; do not use it unless that connection is keyed and configured first.
 - Table-rebuild migrations must follow the FK-safe procedure in `docs/DATABASE_DESIGN.md` §8; a naive rebuild cascade-deletes child rows.
 - Built-in collection types and categories use permanent IDs from the reserved built-in namespace (O-020; format O-038). User-created rows use random v4 UUIDs and must never use an ID in the reserved namespace.
-- The permanent application identifier is `com.aubreyzip.memento` on Android and iOS (O-001). Spike and experimental builds must use a different identifier.
+- The permanent application identifier is `com.aubreyzip.memento` (O-001). Spike and experimental builds must use a different identifier.
 - Keep business rules in feature/application services and domain types, not in presentation components.
 - Use versioned database migrations. Never change an already-released migration in place; add a new migration.
 - Use stable UUID identifiers for persisted entities.
@@ -90,10 +90,10 @@ Whenever a product or architecture decision is made or changes:
 - Do not use Expo Go as evidence that SQLCipher works; use a custom development/preview build.
 - SQLCipher does not encrypt attachment files. The attachment-protection design is pending decision O-008 in `docs/DECISIONS.md`; do not implement attachment storage until it is decided and reflected in `docs/SDD.md` §9.
 - Never automatically delete, overwrite, or recreate an existing database file because its key is missing or wrong. Follow confirmed decision O-019: quarantine the file and its sidecars, then offer "Restore from a Memento backup" or "Start fresh" (SDD §8.1.1).
-- The encrypted database foundation (SQLCipher, fail-closed `cipher_version` check, key storage, O-019 recovery, O-018 exclusion) is built in Phase 1, not deferred to Phase 5 (O-036). Before any build stores real data, verify it on a physical Android device and a physical iPhone (G-003 gates in `docs/PHASE_0_REPORT.md` §7).
+- The encrypted database foundation (SQLCipher, fail-closed `cipher_version` check, key storage, O-019 recovery, O-018 exclusion) is built in Phase 1, not deferred to Phase 5 (O-036). Before any build stores real data, verify it on a physical Android device (G-003 gates in `docs/PHASE_0_REPORT.md` §7).
 - Key the database with a random 256-bit raw key stored in SecureStore with `AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY` (O-019).
 - Do not store data-encryption keys in SecureStore with `requireAuthentication: true`; such values become unreadable when the user's biometrics change.
-- Memento's private data is excluded from OS device backups and device-to-device transfer (confirmed O-018). On Android, `allowBackup="false"` alone is not enough: also ship `dataExtractionRules` that exclude every domain for cloud backup and device transfer (SDD §12.4). On iOS, use the confirmed O-039 mechanism: a small local Expo module that sets `isExcludedFromBackup` on the data directory. Exclusion is best effort, so the O-019 recovery path is still required.
+- Memento's private data is excluded from OS device backups and device-to-device transfer (confirmed O-018). On Android, `allowBackup="false"` alone is not enough: also ship `dataExtractionRules` that exclude every domain for cloud backup and device transfer (SDD §12.4). Exclusion is best effort, so the O-019 recovery path is still required.
 - Do not invent cryptography. Use vetted libraries and a reviewed, versioned backup encryption format.
 - Ask for confirmation before destructive restore, collection deletion, or full data deletion.
 - Do not add permissions, network calls, telemetry, crash-reporting services, or SDKs unless a documented requirement justifies them and the privacy disclosures are updated.

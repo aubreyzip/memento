@@ -8,19 +8,19 @@ Memento is a private, offline-first personal information organizer for rememberi
 
 - **Documentation baseline:** `0.3` — 8 November 2026 (see `docs/DECISIONS.md`)
 - **Implementation status:** Phase 0 concluded; Phase 1 (project foundation) is next. Product implementation not started. See [`docs/ROADMAP.md`](./docs/ROADMAP.md).
-- **Application identifier:** `com.aubreyzip.memento` (Android and iOS)
-- **Platforms:** Android and iOS
+- **Application identifier:** `com.aubreyzip.memento`
+- **Platforms:** Android only (O-054)
 - **Primary stack:** React Native 0.88, Expo SDK 58, Expo Router, TypeScript (strict), SQLite (planned). Mobile only, no web target.
 - **V1 model:** Single-user, local-first, no application backend, no account system, no cloud sync
 
 ## Development
 
-Prerequisites: Node.js **24** (24.3 or newer; pinned in `.nvmrc` and `engines`, enforced by `.npmrc` `engine-strict`), npm, and for native builds the Android SDK or Xcode. Targets: Android 7.0 (API 24)+ and iOS 16.4+. Install with `npm install`.
+Prerequisites: Node.js **24** (24.3 or newer; pinned in `.nvmrc` and `engines`, enforced by `.npmrc` `engine-strict`), npm, and for native builds the Android SDK. Target: Android 7.0 (API 24)+. Install with `npm install`.
 
 | Command | Purpose |
 |---|---|
 | `npm start` | Start the Expo dev server |
-| `npm run android` / `npm run ios` | Start the dev server and open Android or iOS |
+| `npm run android` | Start the dev server and open Android |
 | `npm run typecheck` | TypeScript check (`tsc --noEmit`) |
 | `npm run lint` | ESLint via `expo lint` |
 | `npm run format` / `npm run format:check` | Prettier: format, or check without writing (code and config only; Markdown is excluded) |
@@ -28,7 +28,7 @@ Prerequisites: Node.js **24** (24.3 or newer; pinned in `.nvmrc` and `engines`, 
 
 CI (`.github/workflows/ci.yml`, GitHub Actions on Node 24) runs install, typecheck, lint, format check, tests, the Expo SDK dependency check, and config validation on every push to `main` and every pull request. `.gitattributes` keeps LF line endings on all platforms.
 
-The app uses SQLCipher (`expo-sqlite` with `useSQLCipher`) and other native modules, so **Expo Go does not work**: Expo Go's SQLite has no SQLCipher, so startup is expected to stop on the "cannot encrypt your data" screen by design (not yet observed on a device). Use a development build (`npx expo run:android` / `npx expo run:ios` on a Mac, or EAS Build).
+The app uses SQLCipher (`expo-sqlite` with `useSQLCipher`) and other native modules, so **Expo Go does not work**: Expo Go's SQLite has no SQLCipher, so startup is expected to stop on the "cannot encrypt your data" screen by design (not yet observed on a device). Use a development build (`npx expo run:android`, or EAS Build).
 
 ## Read before implementing
 

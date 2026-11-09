@@ -7,11 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "memento",
     "userInterfaceStyle": "automatic",
-    "ios": {
-      "bundleIdentifier": "com.aubreyzip.memento",
-      "icon": "./assets/expo.icon",
-      "deploymentTarget": "16.4"
-    },
     "android": {
       "package": "com.aubreyzip.memento",
       "adaptiveIcon": {
@@ -59,8 +54,7 @@
       [
         "expo-secure-store",
         {
-          "configureAndroidBackup": false,
-          "faceIDPermission": false
+          "configureAndroidBackup": false
         }
       ],
       "./plugins/with-no-os-backup"

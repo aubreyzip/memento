@@ -168,16 +168,16 @@ Each gate must pass before the phase that depends on it is accepted. Evidence is
 
 | # | Gate | Platforms | Must pass in |
 |---|---|---|---|
-| G1 | `cipher_version` returns a version; raw key accepted; file header not plaintext; open without key and with wrong key both fail detectably; correct key reopens | Physical Android device and physical iPhone, release-style build | Phase 1, before any build stores real data |
-| G2 | Separate-connection behavior: the exclusive-transaction connection is not keyed (or the API is not used); foreign keys enforced in `withTransactionAsync()` | Both | Phase 1 |
-| G3 | O-019 states A–E on device, including quarantine with byte-identical files (with a leftover WAL: content intact and openable with the original key, O-051 option c) and the recovery screen | Both | Phase 1 |
-| G4 | SecureStore key with `AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY` round-trips without authentication; data stays readable after a biometric enrolment change | Both | Phase 1 |
+| G1 | `cipher_version` returns a version; raw key accepted; file header not plaintext; open without key and with wrong key both fail detectably; correct key reopens | Physical Android device, release-style build (iPhone dropped, O-054) | Phase 1, before any build stores real data |
+| G2 | Separate-connection behavior: the exclusive-transaction connection is not keyed (or the API is not used); foreign keys enforced in `withTransactionAsync()` | Android | Phase 1 |
+| G3 | O-019 states A–E on device, including quarantine with byte-identical files (with a leftover WAL: content intact and openable with the original key, O-051 option c) and the recovery screen | Android | Phase 1 |
+| G4 | SecureStore key with `AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY` round-trips without authentication; data stays readable after a biometric enrolment change | Android | Phase 1 |
 | G5 | Android backup exclusion in practice: merged release manifest, `bmgr backupnow`, device-to-device transfer | Android | Phase 1 |
-| G6 | iOS exclusion module: flag set and persistent after writes; behavior after an encrypted device backup/restore or Quick Start transfer ends in an empty app or the recovery screen | iPhone | Phase 1, before iOS builds store real data |
-| G7 | Permission audit of the release manifest and the iOS usage strings | Both | Phase 1 |
-| G8 | AES-GCM 5 MB round trip, AAD tamper rejection, interoperability vector checked in Node | Both | Phase 3 (photos) |
-| G9 | Notification scheduling counts, exact-alarm permission flow, iOS 64-pending behavior | Both | Phase 4 |
-| G10 | Argon2id RFC 9106 vector, 64 MiB timing on a mid-range device, cross-check with an independent implementation; dependency approval | Both | Phase 5 |
+| G6 | ~~iOS exclusion module~~ **Dropped** (O-054, Android only) | — | — |
+| G7 | Permission audit of the release manifest | Android | Phase 1 |
+| G8 | AES-GCM 5 MB round trip, AAD tamper rejection, interoperability vector checked in Node | Android | Phase 3 (photos) |
+| G9 | Notification scheduling counts, exact-alarm permission flow | Android | Phase 4 |
+| G10 | Argon2id RFC 9106 vector, 64 MiB timing on a mid-range device, cross-check with an independent implementation; dependency approval | Android | Phase 5 |
 
 The native probe in `experiments/phase-0/native-probe/` already automates G1–G4, G8, G9, and G10. G5–G7 need manual steps. Since 9 Nov 2026 the app's own on-device suite (`src/features/device-checks/`, TEST_PLAN §7) automates G1–G3 and the G4 key round trip against the production code paths; the product owner chose to skip the probe for the Phase 1 run. The G4 biometric-change step stays manual. Running either needs an Android build, which currently fails at the repository path (D-017 finding, O-050).
 
@@ -192,7 +192,7 @@ First pass on an Android Studio emulator (API 36 / Android 16, Google APIs x86_6
 | G3 | **Partial: finding O-051** | Suite: states A–E and "Start fresh" pass; quarantined bytes identical; quarantined file opens with the original key. Real app: A, B (Dark and Türkçe kept after restart), C (recovery screen in System appearance and language; database, WAL, and SHM quarantined with identical MD5), "Start fresh" (Cancel keeps the screen; confirm opens Home with defaults; quarantined files unchanged), and E pass. State D shows the recovery screen, but with a leftover WAL the main file is changed and the sidecars removed before quarantine (data preserved; O-051). |
 | G4 | First pass only | Suite: key stored and read back without authentication. Real app: opens with saved settings after a fingerprint was enrolled and again after it was removed (emulated sensor, software keystore). The final check needs a physical device. |
 | G5 | Pass except device transfer | Release merged manifest: `allowBackup="false"`, `dataExtractionRules` and `fullBackupContent` with the Memento rules. Installed package has no `ALLOW_BACKUP` flag; `bmgr backupnow` reports "Backup is not allowed". A device-to-device transfer needs two devices. |
-| G6 | Not run | Needs an iPhone and a Mac or EAS. |
+| G6 | Dropped | iOS removed from scope (O-054). |
 | G7 | **Partial: finding O-052** | Release manifest: `INTERNET` (O-049), `USE_BIOMETRIC` and `USE_FINGERPRINT` (from `androidx.biometric`, O-052), and the app's own `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. `SYSTEM_ALERT_WINDOW` and `ACCESS_LOCAL_NETWORK` appear only in debug builds (React Native debug manifest). iOS usage strings not checked here. |
 | G8–G10 | Not run | Deferred to the real-device session by the product owner. |
 
