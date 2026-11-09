@@ -1,5 +1,7 @@
 # Phase 0 Report — Technical Validation
 
+> **Frozen record (9 November 2026, G-004).** Do not edit, except the §7 gate list and gate-status tables, which remain the tracker for the carried-forward gates.
+
 **Date:** 8 November 2026  
 **Phase:** 0 — Technical validation and proofs of concept (ROADMAP, decision O-015)  
 **Outcome:** **Concluded with validation carried forward** (decision G-003)  
@@ -168,7 +170,7 @@ Each gate must pass before the phase that depends on it is accepted. Evidence is
 |---|---|---|---|
 | G1 | `cipher_version` returns a version; raw key accepted; file header not plaintext; open without key and with wrong key both fail detectably; correct key reopens | Physical Android device and physical iPhone, release-style build | Phase 1, before any build stores real data |
 | G2 | Separate-connection behavior: the exclusive-transaction connection is not keyed (or the API is not used); foreign keys enforced in `withTransactionAsync()` | Both | Phase 1 |
-| G3 | O-019 states A–E on device, including quarantine with byte-identical files and the recovery screen | Both | Phase 1 |
+| G3 | O-019 states A–E on device, including quarantine with byte-identical files (with a leftover WAL: content intact and openable with the original key, O-051 option c) and the recovery screen | Both | Phase 1 |
 | G4 | SecureStore key with `AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY` round-trips without authentication; data stays readable after a biometric enrolment change | Both | Phase 1 |
 | G5 | Android backup exclusion in practice: merged release manifest, `bmgr backupnow`, device-to-device transfer | Android | Phase 1 |
 | G6 | iOS exclusion module: flag set and persistent after writes; behavior after an encrypted device backup/restore or Quick Start transfer ends in an empty app or the recovery screen | iPhone | Phase 1, before iOS builds store real data |
@@ -197,6 +199,8 @@ First pass on an Android Studio emulator (API 36 / Android 16, Google APIs x86_6
 Other observation: on the startup screens (loading, recovery, error) the status-bar icons follow the default style, which is white on the light background; the style is set only inside the main app.
 
 **Follow-up (9 Nov 2026, not yet re-run on a device).** O-051 option (a) and O-052 were confirmed and implemented: startup snapshots a leftover WAL before the key check and quarantines the snapshot on a mismatch (new on-device check `state-d-wal-preserved`); `USE_BIOMETRIC` and `USE_FINGERPRINT` are blocked (config introspection shows `tools:node="remove"`); the startup screens set the status-bar style to `auto`. G3 and G7 stay **Partial** until the device run confirms them.
+
+**Change (9 Nov 2026, process cuts).** O-051 changed to option (c): the pre-open snapshot was removed, and the on-device check is now `state-d-wal-recoverable`. It checks that the quarantined files open with the original key and keep the WAL-only change, not byte-identity. G3 stays **Partial** until the device run.
 
 ## 8. Remaining open decisions
 

@@ -2,7 +2,7 @@
 
 **Version:** 0.1  
 **Date:** 8 November 2026  
-**Status:** Phase structure Confirmed (decision O-015, product owner, 8 November 2026). Phase contents are a planning baseline; items that depend on an Open or Proposed decision are marked.
+**Status:** Phase structure Confirmed (decision O-015, product owner, 8 November 2026; Phases 2 and 3 combined by O-053, 9 November 2026). Phase contents are a planning baseline; items that depend on an Open or Proposed decision are marked.
 
 ## 1. Rules
 
@@ -10,6 +10,8 @@
 - Within a phase, work is delivered in bounded slices with tests, following root `CLAUDE.md`.
 - Before starting a phase, check the "Needed by" column in [`DECISIONS.md`](./DECISIONS.md). Any Open or Proposed item needed by that phase must be settled first.
 - No phase may expand V1 scope beyond [`PRD.md`](./PRD.md) and the V1 exclusions in `DECISIONS.md` §5.
+- Each phase exit evaluation includes reconciling the other documents with the decisions made during the phase (G-004). Between exits, `DECISIONS.md` wins over older wording.
+- Phases 2 and 3 run as one combined phase with a single exit evaluation (O-053).
 
 ## 2. Phases
 
@@ -56,18 +58,23 @@
 
 **Decisions:** all Phase 1 decisions are Confirmed, including O-009 (SDK 58, Node 24, Android 7.0 / iOS 16.4) and O-034 (language selection). **Also needed:** access to a physical Android device, a physical iPhone, and a macOS machine or EAS account for iOS builds, for the carried-forward gates. 
 
-### Phase 2 — Collections and categories
+### Phases 2 and 3 (combined, O-053) — Collections, categories, entries, and Quick Capture Inbox
+
+One phase with a single exit evaluation; the labels are kept so "Needed by Phase 2/3" entries stay valid.
+
+**Phase 2 part — collections and categories**
 
 - Collection CRUD and archive; built-in and custom collection types.
 - Built-in and custom categories using the five templates; category management.
-- **Needed before start:** O-005, O-006, O-014 (Proposed), O-025, O-027 (names).
+- UI icon set: `@expo/vector-icons` (O-046), installed at the start.
 
-### Phase 3 — Entries and Quick Capture Inbox
+**Phase 3 part — entries and Quick Capture Inbox**
 
-- Entries with template-driven fields: title, description, status, priority, dates, price, location, links, tags, pin, archive.
-- Photos with their final protection (Confirmed O-037); requires O-008, O-031, O-012. Gate: on-device AES-GCM verification (G-003).
+- Entries with template-driven fields: title, description, status, priority, dates with recurrence (weekly, monthly, yearly; O-024), price, location, links, tags, pin, archive.
+- Photos with their final protection (O-037, O-008 option A). Gate: on-device AES-GCM verification G8 (G-003).
 - Quick Capture, Inbox, atomic assignment, move back to Inbox.
-- **Needed before start:** O-008, O-010, O-011, O-012, O-021, O-022, O-023, O-024, O-026 (schema), O-027, O-031.
+
+**Decisions:** all items needed by Phases 2 and 3 are Confirmed (9 Nov 2026), except the O-024 month-end edge rule, to confirm at the start.
 
 ### Phase 4 — Dashboard, search, and reminders
 
@@ -95,5 +102,6 @@
 | Phase | Status |
 |---|---|
 | 0 | **Concluded** 8 Nov 2026 (G-003). Node harness and documentation validation done; no native build completed; native validation carried forward as gates. See `PHASE_0_REPORT.md`. |
-| 1 | **In progress.** Slices 1–6 done (8 Nov 2026): tooling and CI, design system, i18n, navigation shell, persistence, encrypted startup, backup exclusion and permissions. 9 Nov 2026: Inbox-rule domain type and the on-device check suite added (226 tests). 9 Nov 2026: Android emulator gate run (PHASE_0_REPORT §7.1): G1, G2 pass; G5 passes except device transfer; G3 and G7 have findings O-051 and O-052; G4 first pass only. Later on 9 Nov 2026: O-051 (a) and O-052 confirmed and implemented, and the startup-screen status-bar style fixed; all Phase 1 code is complete. Remaining: the physical-device run (Android and iPhone, including G4 final, G5 transfer, G6, G8–G10), open items O-045, O-046, O-049, then the Phase 1 evaluation. |
-| 2–6 | Not started. |
+| 1 | **In progress.** Slices 1–6 done (8 Nov 2026): tooling and CI, design system, i18n, navigation shell, persistence, encrypted startup, backup exclusion and permissions. 9 Nov 2026: Inbox-rule domain type and the on-device check suite added (226 tests). 9 Nov 2026: Android emulator gate run (PHASE_0_REPORT §7.1): G1, G2 pass; G5 passes except device transfer; G3 and G7 have findings O-051 and O-052; G4 first pass only. Later on 9 Nov 2026: O-051 (a) and O-052 confirmed and implemented, and the startup-screen status-bar style fixed; all Phase 1 code is complete. Process cuts (9 Nov 2026): O-051 changed to option (c) and its pre-open copy removed; G-004 doc rule; O-053 merges Phases 2 and 3. Remaining: the physical-device run (Android and iPhone, including G4 final, G5 transfer, G6, G8–G10), open items O-045 and O-049 (needed before beta), then the Phase 1 evaluation (including the G-004 doc reconciliation). |
+| 2–3 | Not started (one combined phase, O-053). Decisions settled. |
+| 4–6 | Not started. |

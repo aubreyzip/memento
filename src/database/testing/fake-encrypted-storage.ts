@@ -45,25 +45,9 @@ export class FakeEncryptedStorage {
     },
   };
 
-  /** Ordered log of file operations and connection opens, for O-051 ordering assertions. */
-  readonly events: string[] = [];
-  /** Simulates a leftover non-empty WAL, which makes `snapshot` copy files (O-051). */
-  walPending = false;
-  snapshotError: Error | null = null;
-
   readonly files: DatabaseFiles = {
     exists: async () => this.file !== null && this.file.hasData,
-    snapshot: async (stamp) => {
-      if (this.openConnections.size > 0) throw new Error('Snapshot with an open connection');
-      if (this.snapshotError) throw this.snapshotError;
-      this.events.push(`snapshot ${stamp}`);
-      return this.walPending ? [`memento.db.pre-open-${stamp}`] : [];
-    },
-    discardSnapshot: async (stamp) => {
-      this.events.push(`discard ${stamp}`);
-    },
     quarantine: async (stamp) => {
-      this.events.push(`quarantine ${stamp}`);
       if (this.openConnections.size > 0) throw new Error('Quarantine with an open connection');
       if (!this.file) return [];
       const names = [`memento.db.quarantine-${stamp}`];
@@ -74,7 +58,6 @@ export class FakeEncryptedStorage {
   };
 
   connect = async (): Promise<ClosableSqlDatabase> => {
-    this.events.push('connect');
     this.file ??= { db: openNodeSqlDatabase(), boundKey: null, hasData: false };
     const file = this.file;
     let sessionKey: string | null = null;

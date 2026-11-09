@@ -47,9 +47,9 @@ async function safeClose(db: ClosableSqlDatabase): Promise<void> {
  *   moved aside, never removed.
  * - A key-storage read error is not treated as a missing key (no quarantine on a locked device).
  * - The key is stored and read back before a new database is created with it.
- * - Before an existing database is opened, a leftover WAL is snapshotted (O-051), so a wrong-key
- *   quarantine keeps the original bytes even though closing the key-check connection may
- *   checkpoint the WAL.
+ * - With a wrong key, closing the key-check connection may checkpoint a leftover WAL into the
+ *   main file (O-051 option c). The quarantined file is then not byte-identical, but its content
+ *   is intact and opens with the original key.
  */
 export async function openEncryptedDatabase(
   deps: DatabaseStartDependencies,
@@ -75,28 +75,7 @@ export async function openEncryptedDatabase(
     };
   }
 
-  if (exists) {
-    // States B and D (O-051). If the copy fails, nothing is opened: fail closed, data unchanged.
-    try {
-      await deps.files.snapshot(stamp);
-    } catch {
-      await discardQuietly(deps, stamp);
-      return { status: 'error', reason: 'open-failed' };
-    }
-  }
-
-  const result = await openWithKey(deps, exists, key, stamp);
-  // A recovery quarantine has already moved the snapshot; every other outcome no longer needs it.
-  if (exists && result.status !== 'recovery') await discardQuietly(deps, stamp);
-  return result;
-}
-
-async function discardQuietly(deps: DatabaseStartDependencies, stamp: string) {
-  try {
-    await deps.files.discardSnapshot(stamp);
-  } catch {
-    // A leftover pre-open copy is harmless; the next startup uses a new stamp.
-  }
+  return openWithKey(deps, exists, key, stamp);
 }
 
 async function openWithKey(
