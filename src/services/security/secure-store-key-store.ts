@@ -13,7 +13,15 @@ const OPTIONS: SecureStore.SecureStoreOptions = {
   requireAuthentication: false,
 };
 
-export const secureStoreKeyStore: DatabaseKeyStore = {
-  get: () => SecureStore.getItemAsync(KEY_NAME, OPTIONS),
-  set: (key) => SecureStore.setItemAsync(KEY_NAME, key, OPTIONS),
-};
+/** The name parameter exists for the on-device checks, which use their own entry (O-017). */
+export function createSecureStoreKeyStore(name: string): DatabaseKeyStore & {
+  remove(): Promise<void>;
+} {
+  return {
+    get: () => SecureStore.getItemAsync(name, OPTIONS),
+    set: (key) => SecureStore.setItemAsync(name, key, OPTIONS),
+    remove: () => SecureStore.deleteItemAsync(name, OPTIONS),
+  };
+}
+
+export const secureStoreKeyStore: DatabaseKeyStore = createSecureStoreKeyStore(KEY_NAME);

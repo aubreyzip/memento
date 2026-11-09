@@ -51,8 +51,8 @@
 - Encrypted database foundation: SQLCipher, fail-closed `cipher_version` check, raw-key keying, key storage, O-019 quarantine and recovery screen, O-018 exclusion on Android (config plugin) and iOS (O-039 local module) (Confirmed O-036). Slice 5b done for SQLCipher setup, key handling, states A–E, quarantine, and recovery/error screens (unit-tested with a fake store; not yet run on a device); O-018 exclusion implemented in slice 6 (Android plugin, iOS module), pending device gates G5/G6.
 - **Phase 0 carry-forward gates (G-003)**, before any build stores real data: verify the items in `PHASE_0_REPORT.md` §7 for Phase 1 on a physical Android device and a physical iPhone.
 - Permission audit: strip template permissions Memento does not need (Phase 0 found `SYSTEM_ALERT_WINDOW`, legacy storage permissions and others in the generated manifest), per NFR-035. Slice 6 done for the configuration (four Android permissions removed, iOS Face ID string removed); `INTERNET` pending O-049; merged-manifest check is part of the device gates.
-- Domain types and invariants: Inbox rule, templates, status sets.
-- Test infrastructure per O-017 (Confirmed): Node-side repository and migration tests, plus an on-device integration suite.
+- Domain types and invariants: Inbox rule (`src/domain/entry-placement.ts`, plus the SQL CHECK) and templates (`src/domain/catalog.ts`) done. Template status sets depend on O-021 (Open, needed by Phase 3) and move to Phase 3.
+- Test infrastructure per O-017 (Confirmed): Node-side repository and migration tests, plus an on-device integration suite. Both built: the on-device suite (`src/features/device-checks/`) runs in development builds started with `EXPO_PUBLIC_DEVICE_CHECKS=1` and automates G1–G3 and the G4 key round trip with a check-only database and key. Not yet run on a device: local Android builds fail at the repository path (D-017 finding, O-050 Open).
 
 **Decisions:** all Phase 1 decisions are Confirmed, including O-009 (SDK 58, Node 24, Android 7.0 / iOS 16.4) and O-034 (language selection). **Also needed:** access to a physical Android device, a physical iPhone, and a macOS machine or EAS account for iOS builds, for the carried-forward gates. 
 
@@ -95,5 +95,5 @@
 | Phase | Status |
 |---|---|
 | 0 | **Concluded** 8 Nov 2026 (G-003). Node harness and documentation validation done; no native build completed; native validation carried forward as gates. See `PHASE_0_REPORT.md`. |
-| 1 | Next. Not started. Scaffold finalized (8 Nov 2026): identifiers set, demo and web content removed, design tokens with O-042 rules, TypeScript/ESLint/Jest, Node 24 pinning, CI workflow, minimum OS versions pinned. |
+| 1 | **In progress.** Slices 1–6 done (8 Nov 2026): tooling and CI, design system, i18n, navigation shell, persistence, encrypted startup, backup exclusion and permissions. 9 Nov 2026: Inbox-rule domain type and the on-device check suite added (226 tests). 9 Nov 2026: Android emulator gate run (PHASE_0_REPORT §7.1): G1, G2 pass; G5 passes except device transfer; G3 and G7 have findings O-051 and O-052; G4 first pass only. Later on 9 Nov 2026: O-051 (a) and O-052 confirmed and implemented, and the startup-screen status-bar style fixed; all Phase 1 code is complete. Remaining: the physical-device run (Android and iPhone, including G4 final, G5 transfer, G6, G8–G10), open items O-045, O-046, O-049, then the Phase 1 evaluation. |
 | 2–6 | Not started. |

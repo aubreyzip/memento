@@ -27,7 +27,10 @@ export function wrapExpoDatabase(db: SQLiteDatabase): ClosableSqlDatabase {
   };
 }
 
-/** Opens (or creates) the app database in expo-sqlite's default directory. Not yet keyed. */
-export async function openExpoDatabase(): Promise<ClosableSqlDatabase> {
-  return wrapExpoDatabase(await openDatabaseAsync(DATABASE_NAME));
+/**
+ * Opens (or creates) a database in expo-sqlite's default directory. Not yet keyed.
+ * The name parameter exists for the on-device checks, which use their own file (O-017).
+ */
+export async function openExpoDatabase(name = DATABASE_NAME): Promise<ClosableSqlDatabase> {
+  return wrapExpoDatabase(await openDatabaseAsync(name));
 }

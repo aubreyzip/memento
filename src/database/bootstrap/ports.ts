@@ -12,8 +12,20 @@ export interface DatabaseFiles {
   /** True only if the database file exists and is non-empty (an empty file holds no data). */
   exists(): Promise<boolean>;
   /**
+   * O-051: if a non-empty `-wal` sidecar exists, copies the database file and its sidecars to
+   * `<file>.pre-open-<stamp>` before the key check opens them. Opening a WAL database with a
+   * wrong key can checkpoint the WAL into the main file when the connection closes, so this
+   * copy is the only byte-for-byte original. Returns the copied names (empty if nothing to copy).
+   */
+  snapshot(stamp: string): Promise<string[]>;
+  /** Deletes the pre-open copies made with this stamp (they are Memento's copies, not data). */
+  discardSnapshot(stamp: string): Promise<void>;
+  /**
    * Moves the database file and any -wal/-shm/-journal sidecars to
-   * `<name>.quarantine-<stamp>` in the same directory. Never deletes. Returns the new names.
+   * `<file>.quarantine-<stamp>` in the same directory. Never deletes. If a pre-open snapshot
+   * with this stamp exists, the snapshot (the untouched originals) takes the
+   * `.quarantine-<stamp>` names and the files the key check opened are kept as
+   * `<file>.quarantine-<stamp>.after-key-check`. Returns the new names.
    */
   quarantine(stamp: string): Promise<string[]>;
 }

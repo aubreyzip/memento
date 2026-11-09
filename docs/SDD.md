@@ -134,7 +134,9 @@ memento/
 │   │   ├── search/
 │   │   ├── reminders/
 │   │   ├── backup/
-│   │   └── settings/
+│   │   ├── settings/
+│   │   ├── startup/             # Database gate, recovery and error screens
+│   │   └── device-checks/       # Dev-only on-device integration checks (O-017)
 │   ├── domain/                  # Shared domain types and invariants
 │   ├── database/
 │   │   ├── migrations/
@@ -242,10 +244,12 @@ Keys: one database key and one media key, each 32 random bytes from a CSPRNG, st
 | A. No database file, no key | File absent; SecureStore returns null | Generate key, store it, create and key the database, run migrations and seeds. |
 | B. Database and key, opens | First read (`SELECT count(*) FROM sqlite_master`) succeeds after keying | Normal startup. |
 | C. Database file, key missing | File present; SecureStore returns null | Close; quarantine; show recovery screen. |
-| D. Database file, wrong key | First read after keying fails (SQLCipher reports the file is not a database) | Close; quarantine; show recovery screen. |
+| D. Database file, wrong key | First read after keying fails (SQLCipher reports the file is not a database) | Close; quarantine (the pre-open snapshot when there is one, O-051); show recovery screen. |
 | E. Key present, no database file | File absent; key present | Create a new database. Reusing the existing key or generating a new one are both safe. |
 
 **Quarantine:** close every connection, then move the database file and any `-wal`, `-shm`, or `-journal` sidecar to `<name>.quarantine-<timestamp>` in the same directory. Moving within one directory is a rename, so file contents should be unchanged; verify byte equality in the Phase 1 on-device test (not verified in Phase 0). Never delete as part of quarantine.
+
+**Leftover WAL (O-051).** Opening a WAL database with a wrong key can checkpoint the WAL into the main file when that connection closes, and SQLite then deletes `-wal`/`-shm` (seen on the emulator). `expo-sqlite` cannot open read-only, so before an existing database is opened (states B and D), startup copies the database and sidecars to `<name>.pre-open-<timestamp>` if a non-empty `-wal` exists. On a mismatch the copies are quarantined under the `.quarantine-<timestamp>` names and the opened files are kept as `.quarantine-<timestamp>.after-key-check`; otherwise the copies are deleted. If the copy fails, nothing is opened and the "could not open" error is shown.
 
 **Recovery screen** (UC-01): explains that the existing data cannot be opened on this device and offers:
 
@@ -420,7 +424,7 @@ Because these rules replace Expo SecureStore's default backup configuration, set
 
 **iOS (implemented, slice 6).** `modules/backup-exclusion` sets the flag on the database directory (`expo-sqlite` `defaultDatabaseDirectory`, which also holds quarantined files) after every startup outcome; failures never block startup. Not compiled or run yet (gate G6). Original design, confirmed as O-039: keep all private data under one app-owned directory and set `isExcludedFromBackup` on it from a small local Expo module, at startup and after creating files. Expo FileSystem (SDK 58) has no API for this. Apple describes the flag as guidance that does not guarantee exclusion, and notes that some file operations reset it. Keys use a `*_THIS_DEVICE_ONLY` Keychain class, so a restored or migrated copy of the database cannot be opened. That situation is handled by §8.1.1.
 
-**Permissions (slice 6, G7).** Android blocks `SYSTEM_ALERT_WINDOW`, `READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE`, and `VIBRATE` via `android.blockedPermissions` (rendered as `tools:node="remove"`); `INTERNET` remains pending O-049. iOS: the SecureStore plugin runs with `faceIDPermission: false`, so no `NSFaceIDUsageDescription` is added (keys never use biometrics); app lock (O-013) will add its own Face ID text when built.
+**Permissions (slice 6, G7).** Android blocks `SYSTEM_ALERT_WINDOW`, `READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE`, `VIBRATE`, and (O-052) `USE_BIOMETRIC` and `USE_FINGERPRINT`, which `androidx.biometric` adds for `expo-secure-store`, via `android.blockedPermissions` (rendered as `tools:node="remove"`); `INTERNET` remains pending O-049. iOS: the SecureStore plugin runs with `faceIDPermission: false`, so no `NSFaceIDUsageDescription` is added (keys never use biometrics); app lock (O-013) will add its own Face ID text when built.
 
 **Residual risk.** On both platforms, exclusion is a best-effort OS contract. The O-019 recovery path is what guarantees that a database arriving without its key is preserved, not overwritten.
 

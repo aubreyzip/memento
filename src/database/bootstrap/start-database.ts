@@ -14,7 +14,7 @@ export async function startDatabase(): Promise<DatabaseStartResult> {
   const result = await openEncryptedDatabase({
     files: expoDatabaseFiles,
     keyStore: secureStoreKeyStore,
-    connect: openExpoDatabase,
+    connect: () => openExpoDatabase(),
     randomBytes: getRandomBytes,
     now: () => new Date(),
   });

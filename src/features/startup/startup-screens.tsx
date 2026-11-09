@@ -1,3 +1,4 @@
+import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { DatabaseStartResult } from '@/database/bootstrap/open-encrypted-database';
@@ -15,7 +16,13 @@ type ErrorReason = Extract<DatabaseStartResult, { status: 'error' }>['reason'];
 
 function ScreenFrame({ children }: { children: React.ReactNode }) {
   const c = useThemeColors();
-  return <View style={[styles.frame, { backgroundColor: c.background }]}>{children}</View>;
+  return (
+    <View style={[styles.frame, { backgroundColor: c.background }]}>
+      {/* `auto` follows the System appearance these screens use, so icons stay readable. */}
+      <StatusBar style="auto" />
+      {children}
+    </View>
+  );
 }
 
 function PrimaryButton({ label, onPress }: { label: string; onPress: () => void }) {

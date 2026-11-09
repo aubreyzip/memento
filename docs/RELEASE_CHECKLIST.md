@@ -37,7 +37,7 @@
 - [ ] Permanent deletion removes local database data and associated files/notifications.
 - [ ] Logs and diagnostics do not contain user content or secrets.
 - [ ] OS backup and device-transfer exclusion is present in the release binaries and verified on both platforms (O-018, SDD §12.4): Android merged manifest (`allowBackup=false`, Memento rules), iOS data directory reports `isExcludedFromBackup`.
-- [ ] Release merged manifest contains only justified permissions (`INTERNET` per O-049) and the iOS Info.plist has no unused usage descriptions.
+- [ ] Release merged manifest contains only justified permissions (`INTERNET` per O-049; no `USE_BIOMETRIC`/`USE_FINGERPRINT` per O-052) and the iOS Info.plist has no unused usage descriptions.
 - [ ] Unreadable-database recovery (quarantine and recovery screen) is verified for the missing-key and wrong-key states (O-019).
 
 ## 3. Functional and platform QA
