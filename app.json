@@ -57,7 +57,8 @@
           "configureAndroidBackup": false
         }
       ],
-      "./plugins/with-no-os-backup"
+      "./plugins/with-no-os-backup",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true,
