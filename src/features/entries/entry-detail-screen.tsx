@@ -1,6 +1,6 @@
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { OptionGroup } from '@/components/option-group';
@@ -32,13 +32,15 @@ export function EntryDetailScreen({ id }: { id: string }) {
     const assigned = entry?.placement.kind === 'assigned' ? entry.placement : undefined;
     return {
       entry,
+      links: entry ? await entries.links(entry.id) : [],
+      tags: entry ? await entries.tags(entry.id) : [],
       category: assigned && (await categories.get(assigned.categoryId)),
       collection: assigned && (await collections.get(assigned.collectionId)),
     };
   });
 
   if (!data) return <View style={[styles.fill, { backgroundColor: c.background }]} />;
-  const { entry, category, collection } = data;
+  const { entry, category, collection, links, tags } = data;
   if (!entry) {
     return (
       <View style={[styles.fill, { backgroundColor: c.background }]}>
@@ -132,6 +134,38 @@ export function EntryDetailScreen({ id }: { id: string }) {
       {entry.description ? (
         <Text style={[styles.description, { color: c.textPrimary }]}>{entry.description}</Text>
       ) : null}
+      {links.length > 0 ? (
+        <View style={styles.section}>
+          <Text accessibilityRole="header" style={[styles.heading, { color: c.textPrimary }]}>
+            {t('entries.detail.links')}
+          </Text>
+          {links.map((link) => (
+            <Text
+              key={link.id}
+              accessibilityRole="link"
+              onPress={() => run(() => Linking.openURL(link.url))}
+              style={[styles.link, { color: c.primary }]}>
+              {link.title ?? link.url}
+            </Text>
+          ))}
+        </View>
+      ) : null}
+      {tags.length > 0 ? (
+        <View style={styles.section}>
+          <Text accessibilityRole="header" style={[styles.heading, { color: c.textPrimary }]}>
+            {t('entries.detail.tags')}
+          </Text>
+          <View style={styles.tags}>
+            {tags.map((tag) => (
+              <Text
+                key={tag.id}
+                style={[styles.badge, { color: c.primary, borderColor: c.primary }]}>
+                {tag.name}
+              </Text>
+            ))}
+          </View>
+        </View>
+      ) : null}
 
       {actionError ? (
         <Text accessibilityLiveRegion="polite" style={[styles.error, { color: c.primary }]}>
@@ -200,6 +234,23 @@ const styles = StyleSheet.create({
   },
   field: {
     fontSize: 16,
+  },
+  section: {
+    gap: spacing.xs,
+  },
+  heading: {
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  link: {
+    fontSize: 16,
+    textDecorationLine: 'underline',
+    paddingVertical: spacing.xs,
+  },
+  tags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
   },
   description: {
     fontSize: 16,

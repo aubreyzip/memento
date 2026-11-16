@@ -8,6 +8,7 @@ import {
 } from '@/domain/catalog';
 import { DomainError } from '@/domain/errors';
 
+import { deleteUnusedTags } from './entry-repository';
 import { newUserId, nextSortOrder, reorderRows, type RepositoryDeps } from './repository-deps';
 
 export type CollectionInput = {
@@ -183,8 +184,9 @@ export class SqliteCollectionRepository implements CollectionRepository {
   async delete(id: string): Promise<void> {
     await this.db.transaction(async () => {
       await this.require(id);
-      // ON DELETE CASCADE removes the collection's entries (and later their child rows).
+      // ON DELETE CASCADE removes the collection's entries and their links and tag assignments.
       await this.db.run('DELETE FROM collections WHERE id = ?', [id]);
+      await deleteUnusedTags(this.db);
     });
   }
 }

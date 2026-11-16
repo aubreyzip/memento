@@ -20,6 +20,7 @@ import { deviceCurrencyCode } from '@/services/locale/device-currency';
 
 import { decimalSeparator } from './entry-format';
 import { initialTemplateValues, toEntryFields } from './entry-form-values';
+import { LinksEditor, TagsEditor } from './links-tags-fields';
 import { TemplateFields, type TemplateValues } from './template-fields';
 
 /**
@@ -32,6 +33,8 @@ export function EntryFormScreen({ id, collectionId }: { id?: string; collectionI
   const { t } = useTranslation();
   const { data } = useCatalogData(async ({ entries, categories }) => ({
     entry: id ? await entries.get(id) : undefined,
+    links: id ? (await entries.links(id)).map((link) => link.url) : [],
+    tags: id ? (await entries.tags(id)).map((tag) => tag.name) : [],
     categories: await categories.listAll(),
   }));
 
@@ -45,7 +48,13 @@ export function EntryFormScreen({ id, collectionId }: { id?: string; collectionI
       ) : missing ? (
         <Text style={[styles.message, { color: c.textSecondary }]}>{t('errors.not-found')}</Text>
       ) : (
-        <EntryForm entry={data.entry} collectionId={collectionId} categories={data.categories} />
+        <EntryForm
+          entry={data.entry}
+          initialLinks={data.links}
+          initialTags={data.tags}
+          collectionId={collectionId}
+          categories={data.categories}
+        />
       )}
     </>
   );
@@ -53,10 +62,14 @@ export function EntryFormScreen({ id, collectionId }: { id?: string; collectionI
 
 function EntryForm({
   entry,
+  initialLinks,
+  initialTags,
   collectionId,
   categories,
 }: {
   entry: Entry | undefined;
+  initialLinks: string[];
+  initialTags: string[];
   collectionId: string | undefined;
   categories: Category[];
 }) {
@@ -82,6 +95,8 @@ function EntryForm({
       decimalSeparator: decimalSeparator(language),
     }),
   );
+  const [links, setLinks] = useState(initialLinks);
+  const [tags, setTags] = useState(initialTags);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -112,7 +127,7 @@ function EntryForm({
             categoryId,
           );
     try {
-      const input = { ...toEntryFields(values), placement, title, description };
+      const input = { ...toEntryFields(values), placement, title, description, links, tags };
       const saved = entry ? await entries.update(entry.id, input) : await entries.create(input);
       if (entry) router.back();
       else router.replace(`/entry/${saved.id}`);
@@ -156,6 +171,8 @@ function EntryForm({
         values={values}
         onChange={(patch) => setValues((current) => ({ ...current, ...patch }))}
       />
+      <LinksEditor links={links} onChange={setLinks} />
+      <TagsEditor tags={tags} onChange={setTags} />
       {formError ? (
         <Text accessibilityLiveRegion="polite" style={[styles.error, { color: c.primary }]}>
           {formError}

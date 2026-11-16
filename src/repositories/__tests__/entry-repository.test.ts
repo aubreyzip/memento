@@ -281,6 +281,72 @@ describe('entries (FR-040 to FR-047, O-021 to O-025)', () => {
     });
   });
 
+  describe('links and tags', () => {
+    const tagCount = async () => (await db.get<{ n: number }>('SELECT count(*) AS n FROM tags'))!.n;
+
+    it('stores links in order and replaces them as a whole', async () => {
+      const entry = await entries.create({
+        placement: INBOX,
+        title: 'Captured',
+        links: ['example.com/b', 'https://example.com/a'],
+      });
+      expect((await entries.links(entry.id)).map((l) => l.url)).toEqual([
+        'https://example.com/b',
+        'https://example.com/a',
+      ]);
+
+      await entries.update(entry.id, { links: ['https://example.com/c'] });
+      expect((await entries.links(entry.id)).map((l) => l.url)).toEqual(['https://example.com/c']);
+
+      await entries.update(entry.id, { title: 'Renamed' });
+      expect(await entries.links(entry.id)).toHaveLength(1);
+    });
+
+    it('rejects an invalid link without saving anything', async () => {
+      await rejectsWith(
+        entries.create({ placement: INBOX, title: 'X', links: ['ftp://example.com'] }),
+        'invalid-url',
+      );
+      expect(await entries.listInbox({ archived: false })).toEqual([]);
+    });
+
+    it('shares tags between entries by folded name and keeps the first spelling', async () => {
+      const first = await entries.create({ placement: INBOX, title: 'A', tags: ['Şule'] });
+      const second = await entries.create({
+        placement: assignedTo(home, NOTES),
+        title: 'B',
+        tags: ['sule', 'Gift'],
+      });
+
+      expect((await entries.tags(first.id)).map((t) => t.name)).toEqual(['Şule']);
+      expect((await entries.tags(second.id)).map((t) => t.name)).toEqual(['Gift', 'Şule']);
+      expect(await tagCount()).toBe(2);
+    });
+
+    it('deletes tags no entry uses any more', async () => {
+      const first = await entries.create({
+        placement: INBOX,
+        title: 'A',
+        tags: ['solo', 'shared'],
+      });
+      const second = await entries.create({
+        placement: assignedTo(home, NOTES),
+        title: 'B',
+        tags: ['shared', 'home'],
+      });
+
+      await entries.update(first.id, { tags: ['shared'] });
+      expect(await tagCount()).toBe(2); // "solo" removed
+
+      await entries.delete(first.id);
+      expect(await tagCount()).toBe(2); // "shared" still used by the second entry
+
+      await collections.delete(home);
+      expect(await entries.get(second.id)).toBeUndefined();
+      expect(await tagCount()).toBe(0);
+    });
+  });
+
   it('rejects an unknown category or collection', async () => {
     await rejectsWith(
       entries.create({ placement: assignedTo(home, randomUUID()), title: 'X' }),

@@ -219,6 +219,41 @@ describe('entries (FR-040 to FR-047, O-021, O-022)', () => {
     expect(screen).toHavePathname('/entry/new');
   });
 
+  it('adds links and tags and shows them on the entry', async () => {
+    await openNewEntryForm();
+    await fireEvent.changeText(screen.getByLabelText('Title'), 'Synthetic gift');
+
+    await fireEvent.changeText(screen.getByLabelText('Web address'), 'example.com/gift');
+    await fireEvent.press(screen.getByRole('button', { name: 'Add link' }));
+    expect(await screen.findByText('https://example.com/gift')).toBeOnTheScreen();
+
+    await fireEvent.changeText(
+      screen.getByLabelText('New tags (separate with commas)'),
+      'Birthday, şule, ŞULE',
+    );
+    await fireEvent.press(screen.getByRole('button', { name: 'Add tags' }));
+    expect(await screen.findByRole('button', { name: 'Remove tag şule' })).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Remove tag ŞULE' })).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'Remove tag Birthday' }));
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Save' }));
+
+    await screen.findByRole('header', { name: 'Synthetic gift' });
+    expect(screen.getByRole('link', { name: 'https://example.com/gift' })).toBeOnTheScreen();
+    expect(screen.getByText('şule')).toBeOnTheScreen();
+    expect(screen.queryByText('Birthday')).toBeNull();
+  });
+
+  it('explains a link that is not a web address', async () => {
+    await openNewEntryForm();
+
+    await fireEvent.changeText(screen.getByLabelText('Web address'), 'ftp://example.com');
+    await fireEvent.press(screen.getByRole('button', { name: 'Add link' }));
+
+    expect(await screen.findByText(/Enter a web address/)).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: /Remove link/ })).toBeNull();
+  });
+
   it('offers no new entries in an archived collection (O-025)', async () => {
     await openNewEntryForm('Synthetic Archive');
     await act(() => router.back());

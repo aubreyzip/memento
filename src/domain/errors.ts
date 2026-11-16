@@ -23,6 +23,12 @@ export type DomainErrorCode =
   | 'invalid-price'
   | 'invalid-currency'
   | 'location-too-long'
+  /** Links are web addresses only (http, https). */
+  | 'invalid-url'
+  | 'url-too-long'
+  | 'too-many-links'
+  | 'tag-required'
+  | 'tag-too-long'
   | 'not-found'
   /** Built-in rows cannot be renamed or deleted (O-041, FR-025). */
   | 'built-in'

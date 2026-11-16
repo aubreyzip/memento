@@ -19,6 +19,13 @@ import {
 } from '@/domain/entry-placement';
 import { RECURRENCES, type Recurrence } from '@/domain/entry-templates';
 import { DomainError } from '@/domain/errors';
+import {
+  normalizeTagName,
+  validateLinks,
+  validateTagNames,
+  type EntryLink,
+  type Tag,
+} from '@/domain/links-tags';
 import { entrySearchText } from '@/domain/search';
 
 import { newUserId, type RepositoryDeps } from './repository-deps';
@@ -38,6 +45,10 @@ export type EntryInput = {
   priceMinor?: number | null;
   currencyCode?: string | null;
   locationText?: string | null;
+  /** Replaces all links when given (web addresses, O-027 limits). */
+  links?: readonly string[];
+  /** Replaces all tags when given (display names; duplicates by folded name are merged). */
+  tags?: readonly string[];
 };
 export type EntryChanges = Partial<EntryInput>;
 
@@ -138,6 +149,10 @@ export interface EntryRepository {
   update(id: string, changes: EntryChanges): Promise<Entry>;
   setPinned(id: string, pinned: boolean): Promise<void>;
   setArchived(id: string, archived: boolean): Promise<void>;
+  /** The entry's links in display order. */
+  links(entryId: string): Promise<EntryLink[]>;
+  /** The entry's tags, alphabetically by folded name. */
+  tags(entryId: string): Promise<Tag[]>;
   /**
    * Permanently deletes the entry. When entries gain attachments and reminders, the caller must
    * collect their files and notification IDs first and clean them up after this commits.
@@ -279,6 +294,8 @@ export class SqliteEntryRepository implements EntryRepository {
 
   async create(input: EntryInput): Promise<Entry> {
     const fields = storedFields(input, { ...NEW_ENTRY, title: '' });
+    const links = input.links && validateLinks(input.links);
+    const tags = input.tags && validateTagNames(input.tags);
     const id = newUserId(this.deps);
     const now = this.deps.now();
     const { collectionId, categoryId } = placementColumns(input.placement);
@@ -307,12 +324,16 @@ export class SqliteEntryRepository implements EntryRepository {
           now,
         ],
       );
+      if (links) await this.replaceLinks(id, links, now);
+      if (tags) await this.replaceTags(id, tags, now);
     });
     return this.require(id);
   }
 
   async update(id: string, changes: EntryChanges): Promise<Entry> {
     const now = this.deps.now();
+    const links = changes.links && validateLinks(changes.links);
+    const tags = changes.tags && validateTagNames(changes.tags);
     await this.db.transaction(async () => {
       const current = await this.require(id);
       const fields = storedFields(changes, current);
@@ -345,8 +366,66 @@ export class SqliteEntryRepository implements EntryRepository {
           id,
         ],
       );
+      if (links) await this.replaceLinks(id, links, now);
+      if (tags) await this.replaceTags(id, tags, now);
     });
     return this.require(id);
+  }
+
+  async links(entryId: string): Promise<EntryLink[]> {
+    return this.db.all<EntryLink>(
+      'SELECT id, url, title FROM entry_links WHERE entry_id = ? ORDER BY sort_order, id',
+      [entryId],
+    );
+  }
+
+  async tags(entryId: string): Promise<Tag[]> {
+    return this.db.all<Tag>(
+      `SELECT t.id, t.display_name AS name, t.normalized_name AS normalizedName
+       FROM entry_tags et JOIN tags t ON t.id = et.tag_id
+       WHERE et.entry_id = ? ORDER BY t.normalized_name`,
+      [entryId],
+    );
+  }
+
+  /** Replaces the entry's links, keeping the given order. Call inside a transaction. */
+  private async replaceLinks(entryId: string, urls: readonly string[], now: string) {
+    await this.db.run('DELETE FROM entry_links WHERE entry_id = ?', [entryId]);
+    for (const [index, url] of urls.entries()) {
+      await this.db.run(
+        `INSERT INTO entry_links (id, entry_id, url, sort_order, created_at)
+         VALUES (?, ?, ?, ?, ?)`,
+        [newUserId(this.deps), entryId, url, index, now],
+      );
+    }
+  }
+
+  /**
+   * Replaces the entry's tags. Existing tags are reused by folded name, keeping their first
+   * spelling; tags no entry uses any more are deleted. Call inside a transaction.
+   */
+  private async replaceTags(entryId: string, names: readonly string[], now: string) {
+    await this.db.run('DELETE FROM entry_tags WHERE entry_id = ?', [entryId]);
+    for (const name of names) {
+      const normalized = normalizeTagName(name);
+      const existing = await this.db.get<{ id: string }>(
+        'SELECT id FROM tags WHERE normalized_name = ?',
+        [normalized],
+      );
+      const tagId = existing?.id ?? newUserId(this.deps);
+      if (!existing) {
+        await this.db.run(
+          `INSERT INTO tags (id, normalized_name, display_name, created_at) VALUES (?, ?, ?, ?)`,
+          [tagId, normalized, name, now],
+        );
+      }
+      await this.db.run('INSERT INTO entry_tags (entry_id, tag_id, created_at) VALUES (?, ?, ?)', [
+        entryId,
+        tagId,
+        now,
+      ]);
+    }
+    await deleteUnusedTags(this.db);
   }
 
   async setPinned(id: string, pinned: boolean): Promise<void> {
@@ -371,7 +450,14 @@ export class SqliteEntryRepository implements EntryRepository {
   async delete(id: string): Promise<void> {
     await this.db.transaction(async () => {
       await this.require(id);
+      // ON DELETE CASCADE removes the entry's links and tag assignments.
       await this.db.run('DELETE FROM entries WHERE id = ?', [id]);
+      await deleteUnusedTags(this.db);
     });
   }
+}
+
+/** Tag cleanup policy: a tag that no entry uses is deleted (DATABASE_DESIGN §3.9). */
+export async function deleteUnusedTags(db: SqlDatabase): Promise<void> {
+  await db.run('DELETE FROM tags WHERE id NOT IN (SELECT tag_id FROM entry_tags)');
 }
