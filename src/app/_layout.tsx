@@ -19,6 +19,7 @@ import { createI18n } from '@/localization/i18n';
 import { LocalizationProvider, useTranslation } from '@/localization/localization-provider';
 import { SqliteSettingsRepository } from '@/repositories/sqlite-settings-repository';
 import { randomUUID } from '@/services/ids/random-uuid';
+import { createDeviceMediaPorts } from '@/services/media/device-media';
 
 /**
  * Developer-only on-device checks (O-017): a development build started with
@@ -40,10 +41,11 @@ function createAppServices(db: ClosableSqlDatabase) {
     language: new SettingController('language', settings),
     currency: new SettingController('defaultCurrency', settings),
     i18n: createI18n(),
-    catalog: createCatalogServices(db, {
-      now: () => new Date().toISOString(),
-      newId: randomUUID,
-    }),
+    catalog: createCatalogServices(
+      db,
+      { now: () => new Date().toISOString(), newId: randomUUID },
+      createDeviceMediaPorts(),
+    ),
   };
 }
 
@@ -58,6 +60,8 @@ function App({ db }: { db: ClosableSqlDatabase }) {
       services.appearance.load(),
       services.language.load(),
       services.currency.load(),
+      // Plaintext left by an interrupted photo intake is removed at every start (SDD §9).
+      services.catalog.photos.purgeTemporary(),
     ]).finally(() => current && setSettingsLoaded(true));
     return () => {
       current = false;

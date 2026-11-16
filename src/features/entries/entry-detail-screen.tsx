@@ -16,6 +16,8 @@ import { errorMessage } from '@/features/catalog/error-message';
 import { categoryName } from '@/localization/catalog-names';
 import { useTranslation } from '@/localization/localization-provider';
 
+import { PhotoSection } from '@/features/photos/photo-section';
+
 import { entryDetailLines, statusLabel } from './entry-display';
 
 /**
@@ -26,7 +28,7 @@ import { entryDetailLines, statusLabel } from './entry-display';
 export function EntryDetailScreen({ id }: { id: string }) {
   const c = useThemeColors();
   const { t, language } = useTranslation();
-  const { entries } = useCatalogServices();
+  const { entries, photos } = useCatalogServices();
   const [actionError, setActionError] = useState<string | null>(null);
   const { data, reload } = useCatalogData(async ({ entries, categories, collections }) => {
     const entry = await entries.get(id);
@@ -88,7 +90,7 @@ export function EntryDetailScreen({ id }: { id: string }) {
         style: 'destructive',
         onPress: () =>
           run(async () => {
-            await entries.delete(entry.id);
+            await photos.deleteEntry(entry.id);
             router.back();
           }),
       },
@@ -151,6 +153,7 @@ export function EntryDetailScreen({ id }: { id: string }) {
       {entry.description ? (
         <Text style={[styles.description, { color: c.textPrimary }]}>{entry.description}</Text>
       ) : null}
+      <PhotoSection entryId={entry.id} />
       {links.length > 0 ? (
         <View style={styles.section}>
           <Text accessibilityRole="header" style={[styles.heading, { color: c.textPrimary }]}>

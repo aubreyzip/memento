@@ -58,6 +58,13 @@
         }
       ],
       "./plugins/with-no-os-backup",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
       "expo-status-bar",
       "@react-native-community/datetimepicker"
     ],

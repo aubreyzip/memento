@@ -302,7 +302,13 @@ Start with parameterized local SQL. SQLite FTS5 may be enabled for title/descrip
 - Treat attachment encryption as a separate requirement from SQLCipher. Use a vetted file-encryption strategy or document a security-approved exception; never claim SQLCipher encrypts media files.
 - Backup/export must include attachment bytes, and restore must validate their hashes before committing.
 - Keep all temporary plaintext (decrypted media for display, restore staging, export temp files) under one app-private temporary directory. Purge it at startup and after each operation completes or fails. Purge decrypted media caches when the app locks.
-- The attachment-protection approach is pending decision O-008. Image intake rules (camera, metadata stripping, size caps) are pending O-031.
+- **Implementation (Phase 2–3, 16 Nov 2026; O-008, O-031, O-059):**
+  - Intake: the system photo picker, library only (no camera or microphone permission; the picker plugin's `CAMERA` and `RECORD_AUDIO` are removed). Photos over 20 MB are skipped. Each photo is re-encoded with `expo-image-manipulator` to JPEG, long edge 2048 px (thumbnail 320 px), which drops EXIF and GPS. Settings live in `PHOTO_INTAKE` and `LIMITS` (O-056).
+  - Encryption: AES-256-GCM from `expo-crypto` with a per-install media key (random 256-bit, SecureStore, same options as the database key, created on first use, never overwritten if unreadable). File layout `"MMD1" | 12-byte IV | ciphertext | 16-byte tag`; the AAD is `memento-media-v1|<attachment id>|<original or thumbnail>`.
+  - Storage: `<documents>/media/<uuid>.bin` and `<uuid>.thumb.bin`, written as `.tmp` then renamed; the row in `entry_attachments` is inserted after both files exist, and the files are removed if the insert fails.
+  - Display: decrypted in memory and shown as a `data:` URI; no plaintext file is written for viewing.
+  - Cleanup: the photo service deletes files after deleting a photo, entry, or collection. At startup, interrupted `.tmp` writes and the picker's and re-encoder's cache folders are purged. Complete files without a row are not swept, so media of a quarantined database (O-019) is never deleted automatically.
+  - Verification: Node tests run the same code with OpenSSL AES-GCM; gate G8 checks `expo-crypto` on a device.
 
 ## 10. Backup and restore design
 

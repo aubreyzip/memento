@@ -20,7 +20,7 @@ import { ListRow } from './list-row';
 export function CollectionDetailScreen({ id }: { id: string }) {
   const c = useThemeColors();
   const { t } = useTranslation();
-  const { collections } = useCatalogServices();
+  const { collections, photos } = useCatalogServices();
   const [actionError, setActionError] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const { data, reload } = useCatalogData(
@@ -74,7 +74,7 @@ export function CollectionDetailScreen({ id }: { id: string }) {
             style: 'destructive',
             onPress: () =>
               run(async () => {
-                await collections.delete(collection.id);
+                await photos.deleteCollection(collection.id);
                 router.back();
               }),
           },

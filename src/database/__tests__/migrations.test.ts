@@ -34,6 +34,7 @@ describe('runMigrations (O-016)', () => {
       'collection_types',
       'collections',
       'entries',
+      'entry_attachments',
       'entry_links',
       'entry_tags',
       'tags',

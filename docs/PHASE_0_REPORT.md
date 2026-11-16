@@ -194,7 +194,8 @@ First pass on an Android Studio emulator (API 36 / Android 16, Google APIs x86_6
 | G5 | Pass except device transfer | Release merged manifest: `allowBackup="false"`, `dataExtractionRules` and `fullBackupContent` with the Memento rules. Installed package has no `ALLOW_BACKUP` flag; `bmgr backupnow` reports "Backup is not allowed". A device-to-device transfer needs two devices. |
 | G6 | Dropped | iOS removed from scope (O-054). |
 | G7 | **Partial: finding O-052** | Release manifest: `INTERNET` (O-049), `USE_BIOMETRIC` and `USE_FINGERPRINT` (from `androidx.biometric`, O-052), and the app's own `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. `SYSTEM_ALERT_WINDOW` and `ACCESS_LOCAL_NETWORK` appear only in debug builds (React Native debug manifest). iOS usage strings not checked here. |
-| G8–G10 | Not run | Deferred to the real-device session by the product owner. |
+| G8 | Not run; check implemented | 16 Nov 2026: the on-device suite now runs `media-aes-gcm-vector` (`expo-crypto` against a known-answer vector computed with Node/OpenSSL), `media-aes-gcm-round-trip` (5 MB) and `media-aes-gcm-tamper` (altered data, other attachment or variant, wrong key). They pass in the Node harness; the device run is still deferred (O-055). |
+| G9–G10 | Not run | Deferred to the real-device session by the product owner. |
 
 Other observation: on the startup screens (loading, recovery, error) the status-bar icons follow the default style, which is white on the light background; the style is set only inside the main app.
 

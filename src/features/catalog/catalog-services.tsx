@@ -2,6 +2,9 @@ import { useFocusEffect } from 'expo-router';
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
 
 import type { SqlDatabase } from '@/database/connection/sql-database';
+import { PhotoService } from '@/features/photos/photo-service';
+import type { MediaPorts } from '@/features/photos/ports';
+import { SqliteAttachmentRepository } from '@/repositories/attachment-repository';
 import {
   SqliteCategoryRepository,
   SqliteCollectionTypeRepository,
@@ -21,14 +24,29 @@ export type CatalogServices = {
   categories: CategoryRepository;
   collections: CollectionRepository;
   entries: EntryRepository;
+  /** Photos, and deletions that must also remove photo files (entries, collections). */
+  photos: PhotoService;
 };
 
-export function createCatalogServices(db: SqlDatabase, deps: RepositoryDeps): CatalogServices {
+export function createCatalogServices(
+  db: SqlDatabase,
+  deps: RepositoryDeps,
+  media: MediaPorts,
+): CatalogServices {
+  const collections = new SqliteCollectionRepository(db, deps);
+  const entries = new SqliteEntryRepository(db, deps);
   return {
     collectionTypes: new SqliteCollectionTypeRepository(db, deps),
     categories: new SqliteCategoryRepository(db, deps),
-    collections: new SqliteCollectionRepository(db, deps),
-    entries: new SqliteEntryRepository(db, deps),
+    collections,
+    entries,
+    photos: new PhotoService({
+      ...media,
+      attachments: new SqliteAttachmentRepository(db, deps.now),
+      entries,
+      collections,
+      newId: deps.newId,
+    }),
   };
 }
 

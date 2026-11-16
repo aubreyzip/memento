@@ -29,6 +29,8 @@ export type DomainErrorCode =
   | 'too-many-links'
   | 'tag-required'
   | 'tag-too-long'
+  /** An entry holds at most the per-entry photo limit (O-027). */
+  | 'too-many-photos'
   | 'not-found'
   /** Built-in rows cannot be renamed or deleted (O-041, FR-025). */
   | 'built-in'
