@@ -5,6 +5,7 @@ import { Alert, Linking, ScrollView, StyleSheet, Text, View } from 'react-native
 import { Button } from '@/components/button';
 import { OptionGroup } from '@/components/option-group';
 import { toIsoDate } from '@/domain/dates';
+import { INBOX } from '@/domain/entry-placement';
 import { templateRule } from '@/domain/entry-templates';
 import { Icon } from '@/design-system/icons';
 import { spacing } from '@/design-system/tokens';
@@ -62,6 +63,22 @@ export function EntryDetailScreen({ id }: { id: string }) {
       await action();
       reload();
     });
+
+  const isInbox = entry.placement.kind === 'inbox';
+
+  // FR-033: back to the Inbox; the status is cleared (O-021), so ask first.
+  const confirmMoveToInbox = () =>
+    Alert.alert(
+      t('entries.moveToInboxTitle'),
+      t('entries.moveToInboxBody', { title: entry.title }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('entries.moveToInbox'),
+          onPress: () => change(() => entries.update(entry.id, { placement: INBOX })),
+        },
+      ],
+    );
 
   const confirmDelete = () =>
     Alert.alert(t('entries.delete.title'), t('entries.delete.body', { title: entry.title }), [
@@ -178,6 +195,18 @@ export function EntryDetailScreen({ id }: { id: string }) {
           label={t('common.edit')}
           onPress={() => router.push(`/entry/${entry.id}/edit`)}
         />
+        <Button
+          icon={isInbox ? 'folder-open-outline' : 'swap-horizontal-outline'}
+          label={isInbox ? t('entries.assign') : t('entries.move')}
+          onPress={() => router.push(`/entry/${entry.id}/assign`)}
+        />
+        {isInbox ? null : (
+          <Button
+            icon="file-tray-outline"
+            label={t('entries.moveToInbox')}
+            onPress={confirmMoveToInbox}
+          />
+        )}
         <Button
           icon={entry.isPinned ? 'pin' : 'pin-outline'}
           label={entry.isPinned ? t('entries.unpin') : t('entries.pin')}

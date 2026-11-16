@@ -1,5 +1,7 @@
 import {
+  DEVICE_CURRENCY,
   FALLBACK_LANGUAGE,
+  isCurrencyPreference,
   isAppearancePreference,
   isLanguagePreference,
   LANGUAGE_PREFERENCES,
@@ -8,7 +10,11 @@ import {
 
 describe('setting defaults', () => {
   it('default to System (FR-003, FR-004, O-044)', () => {
-    expect(SETTING_DEFAULTS).toEqual({ appearance: 'system', language: 'system' });
+    expect(SETTING_DEFAULTS).toEqual({
+      appearance: 'system',
+      language: 'system',
+      defaultCurrency: DEVICE_CURRENCY,
+    });
   });
 
   it('falls back to English', () => {
@@ -33,5 +39,15 @@ describe('language setting', () => {
 
   it.each(['de', 'EN', 'en-US', '', null, 0])('rejects %p', (value) => {
     expect(isLanguagePreference(value)).toBe(false);
+  });
+});
+
+describe('default currency setting (O-010)', () => {
+  it.each(['', 'EUR', 'TRY', 'JPY'])('accepts %p', (value) => {
+    expect(isCurrencyPreference(value)).toBe(true);
+  });
+
+  it.each(['eur', 'EURO', 'E1R', null, 3])('rejects %p', (value) => {
+    expect(isCurrencyPreference(value)).toBe(false);
   });
 });

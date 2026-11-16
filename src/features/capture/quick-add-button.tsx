@@ -7,7 +7,7 @@ import { useTranslation } from '@/localization/localization-provider';
 
 /**
  * Global Quick Add entry point (B-008): shown in the header of every primary area and opens the
- * capture modal. Quick Capture itself is built in Phase 3.
+ * Quick Capture modal (UC-05).
  */
 export function QuickAddButton() {
   const c = useThemeColors();

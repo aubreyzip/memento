@@ -87,6 +87,17 @@ export const en = {
     pin: 'Pin',
     unpin: 'Unpin',
     inbox: 'Inbox',
+    assign: 'Assign',
+    move: 'Move',
+    moveToInbox: 'Move to Inbox',
+    assignTitle: 'Assign entry',
+    moveTitle: 'Move entry',
+    collection: 'Collection',
+    noCollections: 'Create a collection first.',
+    statusResetHint: 'A category with another template resets the status.',
+    moveToInboxTitle: 'Move to the Inbox?',
+    moveToInboxBody:
+      '"{{title}}" leaves its collection and category. Its status is cleared; everything else is kept.',
     form: {
       newTitle: 'New entry',
       editTitle: 'Edit entry',
@@ -207,6 +218,18 @@ export const en = {
   },
   capture: {
     title: 'Quick Capture',
+    destination: 'Save to',
+    category: 'Category',
+    savedInbox: 'Saved to the Inbox.',
+    savedCollection: 'Saved to {{name}}.',
+    another: 'Capture another',
+    done: 'Done',
+  },
+  inbox: {
+    title: 'Inbox',
+    empty: 'The Inbox is empty. Use Quick Add (+) to capture something and sort it later.',
+    count: 'Entries: {{count}}',
+    open: 'Inbox ({{count}})',
   },
   startup: {
     loading: 'Opening Memento',
@@ -262,6 +285,15 @@ export const en = {
     language: {
       label: 'Language',
       system: 'System',
+    },
+    currency: {
+      label: 'Default currency',
+      hint: 'Used for new prices. Prices you already saved keep their currency.',
+      device: 'Device region ({{code}})',
+      deviceNone: 'Device region (none)',
+      other: 'Other',
+      code: 'Currency code',
+      saveCode: 'Save currency code',
     },
   },
 } as const;

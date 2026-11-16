@@ -93,6 +93,17 @@ export const tr: PartialTranslationResource = {
     pin: 'Sabitle',
     unpin: 'Sabitlemeyi kaldır',
     inbox: 'Gelen kutusu',
+    assign: 'Yerleştir',
+    move: 'Taşı',
+    moveToInbox: 'Gelen kutusuna taşı',
+    assignTitle: 'Kaydı yerleştir',
+    moveTitle: 'Kaydı taşı',
+    collection: 'Koleksiyon',
+    noCollections: 'Önce bir koleksiyon oluşturun.',
+    statusResetHint: 'Başka şablonlu bir kategori durumu sıfırlar.',
+    moveToInboxTitle: 'Gelen kutusuna taşınsın mı?',
+    moveToInboxBody:
+      '"{{title}}" koleksiyonundan ve kategorisinden çıkar. Durumu temizlenir; diğer her şey korunur.',
     form: {
       newTitle: 'Yeni kayıt',
       editTitle: 'Kaydı düzenle',
@@ -213,6 +224,18 @@ export const tr: PartialTranslationResource = {
   },
   capture: {
     title: 'Hızlı Kayıt',
+    destination: 'Kaydedilecek yer',
+    category: 'Kategori',
+    savedInbox: 'Gelen kutusuna kaydedildi.',
+    savedCollection: '{{name}} koleksiyonuna kaydedildi.',
+    another: 'Bir tane daha',
+    done: 'Bitti',
+  },
+  inbox: {
+    title: 'Gelen kutusu',
+    empty: 'Gelen kutusu boş. Bir şeyi kaydedip sonra düzenlemek için Hızlı Ekle (+) kullanın.',
+    count: 'Kayıt sayısı: {{count}}',
+    open: 'Gelen kutusu ({{count}})',
   },
   startup: {
     loading: 'Memento açılıyor',
@@ -268,6 +291,15 @@ export const tr: PartialTranslationResource = {
     language: {
       label: 'Dil',
       system: 'Sistem',
+    },
+    currency: {
+      label: 'Varsayılan para birimi',
+      hint: 'Yeni fiyatlar için kullanılır. Kaydedilmiş fiyatlar kendi para birimini korur.',
+      device: 'Cihaz bölgesi ({{code}})',
+      deviceNone: 'Cihaz bölgesi (yok)',
+      other: 'Diğer',
+      code: 'Para birimi kodu',
+      saveCode: 'Para birimi kodunu kaydet',
     },
   },
 };

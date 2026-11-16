@@ -14,9 +14,9 @@ import { spacing } from '@/design-system/tokens';
 import { useThemeColors } from '@/design-system/use-theme-colors';
 import { useCatalogData, useCatalogServices } from '@/features/catalog/catalog-services';
 import { errorMessage } from '@/features/catalog/error-message';
+import { useDefaultCurrency } from '@/features/settings/currency-setting';
 import { categoryName } from '@/localization/catalog-names';
 import { useTranslation } from '@/localization/localization-provider';
-import { deviceCurrencyCode } from '@/services/locale/device-currency';
 
 import { decimalSeparator } from './entry-format';
 import { initialTemplateValues, toEntryFields } from './entry-form-values';
@@ -76,6 +76,7 @@ function EntryForm({
   const c = useThemeColors();
   const { t, language } = useTranslation();
   const { entries } = useCatalogServices();
+  const { effective: defaultCurrency } = useDefaultCurrency();
 
   const isInbox = entry?.placement.kind === 'inbox';
   const originalCategoryId =
@@ -91,7 +92,7 @@ function EntryForm({
   const [description, setDescription] = useState(entry?.description ?? '');
   const [values, setValues] = useState<TemplateValues>(() =>
     initialTemplateValues(entry, template, {
-      defaultCurrency: deviceCurrencyCode(),
+      defaultCurrency,
       decimalSeparator: decimalSeparator(language),
     }),
   );

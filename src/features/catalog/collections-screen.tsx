@@ -18,7 +18,8 @@ export function CollectionsScreen() {
   const c = useThemeColors();
   const { t } = useTranslation();
   const [showArchived, setShowArchived] = useState(false);
-  const { data } = useCatalogData(async ({ collections, collectionTypes }) => ({
+  const { data } = useCatalogData(async ({ collections, collectionTypes, entries }) => ({
+    inboxCount: (await entries.listInbox({ archived: false })).length,
     active: await collections.list({ archived: false }),
     archived: await collections.list({ archived: true }),
     types: new Map((await collectionTypes.listAll()).map((type) => [type.id, type])),
@@ -53,6 +54,13 @@ export function CollectionsScreen() {
         />
       </View>
 
+      {/* The Inbox is system-managed: listed first, never edited or deleted (FR-035). */}
+      <ListRow
+        icon="file-tray-outline"
+        title={t('inbox.title')}
+        subtitle={t('inbox.count', { count: data.inboxCount })}
+        onPress={() => router.push('/inbox')}
+      />
       {data.active.length === 0 ? (
         <Text style={[styles.empty, { color: c.textSecondary }]}>{t('collections.empty')}</Text>
       ) : (

@@ -11,6 +11,7 @@ import {
 } from '@/features/catalog/catalog-services';
 import { createDeviceCheckEnv } from '@/features/device-checks/device-check-env';
 import { DeviceChecksScreen } from '@/features/device-checks/device-checks-screen';
+import { CurrencySettingProvider } from '@/features/settings/currency-setting';
 import { SettingController } from '@/features/settings/setting-controller';
 import { DatabaseGate } from '@/features/startup/database-gate';
 import { StartupLoadingScreen } from '@/features/startup/startup-screens';
@@ -37,6 +38,7 @@ function createAppServices(db: ClosableSqlDatabase) {
   return {
     appearance: new SettingController('appearance', settings),
     language: new SettingController('language', settings),
+    currency: new SettingController('defaultCurrency', settings),
     i18n: createI18n(),
     catalog: createCatalogServices(db, {
       now: () => new Date().toISOString(),
@@ -52,9 +54,11 @@ function App({ db }: { db: ClosableSqlDatabase }) {
   useEffect(() => {
     let current = true;
     // Load saved preferences before the first app frame, so the theme does not flash.
-    Promise.all([services.appearance.load(), services.language.load()]).finally(
-      () => current && setSettingsLoaded(true),
-    );
+    Promise.all([
+      services.appearance.load(),
+      services.language.load(),
+      services.currency.load(),
+    ]).finally(() => current && setSettingsLoaded(true));
     return () => {
       current = false;
     };
@@ -65,11 +69,13 @@ function App({ db }: { db: ClosableSqlDatabase }) {
   return (
     <LocalizationProvider store={services.language} i18nInstance={services.i18n}>
       <AppearanceProvider controller={services.appearance}>
-        <CatalogServicesProvider services={services.catalog}>
-          <NavigationTheme>
-            <RootStack />
-          </NavigationTheme>
-        </CatalogServicesProvider>
+        <CurrencySettingProvider controller={services.currency}>
+          <CatalogServicesProvider services={services.catalog}>
+            <NavigationTheme>
+              <RootStack />
+            </NavigationTheme>
+          </CatalogServicesProvider>
+        </CurrencySettingProvider>
       </AppearanceProvider>
     </LocalizationProvider>
   );
@@ -83,6 +89,7 @@ function RootStack() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="capture" options={{ presentation: 'modal', title: t('capture.title') }} />
       <Stack.Screen name="catalog/index" options={{ title: t('catalog.title') }} />
+      <Stack.Screen name="inbox" options={{ title: t('inbox.title') }} />
     </Stack>
   );
 }
