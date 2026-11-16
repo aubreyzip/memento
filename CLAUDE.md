@@ -74,6 +74,7 @@ Whenever a product or architecture decision is made or changes:
 - Built-in collection types and categories use permanent IDs from the reserved built-in namespace (O-020; format O-038). User-created rows use random v4 UUIDs and must never use an ID in the reserved namespace.
 - The permanent application identifier is `com.aubreyzip.memento` (O-001). Spike and experimental builds must use a different identifier.
 - Keep business rules in feature/application services and domain types, not in presentation components.
+- Define changeable product rules (limits, option lists, the template field matrix, status sets, recurrence kinds, and similar) once, in a declarative table per area, and derive validation, screens, and tests from it; persist stable codes, not labels (O-056).
 - Use versioned database migrations. Never change an already-released migration in place; add a new migration.
 - Use stable UUID identifiers for persisted entities.
 - Keep collection types and categories data-driven. Built-in entries are seeded system data; custom entries are regular user data.

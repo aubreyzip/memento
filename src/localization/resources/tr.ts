@@ -5,9 +5,12 @@ import type { PartialTranslationResource } from './en';
  * (RELEASE_CHECKLIST "English and Turkish UI have been reviewed").
  *
  * Intentionally missing (falls back to English, O-034):
- * - `app.tagline`: the Turkish tagline is brand copy and has not been decided (O-045).
+ * Nothing at the moment. The tagline is brand copy (O-045, confirmed 16 Nov 2026).
  */
 export const tr: PartialTranslationResource = {
+  app: {
+    tagline: 'Küçük şeyleri hatırla.',
+  },
   common: {
     cancel: 'Vazgeç',
     close: 'Kapat',
