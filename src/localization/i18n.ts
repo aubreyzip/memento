@@ -11,7 +11,8 @@ type Paths<T, P extends string = ''> = {
 
 /** Every valid translation key, derived from the English resource. */
 export type TranslationKey = Paths<typeof en>;
-export type Translate = (key: TranslationKey) => string;
+/** Values fill `{{name}}` placeholders. Avoid plural forms: phrase counts as "Entries: {{count}}". */
+export type Translate = (key: TranslationKey, values?: Record<string, string | number>) => string;
 
 /** Language names shown in the language setting, each in its own language (not translated). */
 export const LANGUAGE_NAMES: Record<SupportedLanguage, string> = {
@@ -38,5 +39,5 @@ export function createI18n(): i18n {
 /** A translate function bound to one language; missing keys fall back to English (O-034). */
 export function translatorFor(instance: i18n, language: SupportedLanguage): Translate {
   const fixed = instance.getFixedT(language);
-  return (key) => fixed(key) as string;
+  return (key, values) => fixed(key, values ?? {}) as string;
 }

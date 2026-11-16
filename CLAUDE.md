@@ -74,6 +74,7 @@ Whenever a product or architecture decision is made or changes:
 - Built-in collection types and categories use permanent IDs from the reserved built-in namespace (O-020; format O-038). User-created rows use random v4 UUIDs and must never use an ID in the reserved namespace.
 - The permanent application identifier is `com.aubreyzip.memento` (O-001). Spike and experimental builds must use a different identifier.
 - Keep business rules in feature/application services and domain types, not in presentation components.
+- Define changeable product rules (limits, option lists, the template field matrix, status sets, recurrence kinds, and similar) once, in a declarative table per area, and derive validation, screens, and tests from it; persist stable codes, not labels (O-056).
 - Use versioned database migrations. Never change an already-released migration in place; add a new migration.
 - Use stable UUID identifiers for persisted entities.
 - Keep collection types and categories data-driven. Built-in entries are seeded system data; custom entries are regular user data.
@@ -88,7 +89,7 @@ Whenever a product or architecture decision is made or changes:
 - SQLCipher is a required V1 security target, but verify that the actual native build includes it before claiming that the database is encrypted. `PRAGMA cipher_version` must be checked on startup; fail closed if encryption is required but unavailable.
 - Never hardcode, commit, print, or expose database encryption keys or backup passphrases.
 - Do not use Expo Go as evidence that SQLCipher works; use a custom development/preview build.
-- SQLCipher does not encrypt attachment files. The attachment-protection design is pending decision O-008 in `docs/DECISIONS.md`; do not implement attachment storage until it is decided and reflected in `docs/SDD.md` §9.
+- SQLCipher does not encrypt attachment files. Photos are encrypted per file with AES-256-GCM and a separate media key in SecureStore (O-008, implemented in `src/features/photos`; SDD §9). Decrypt only into memory for display; never write plaintext media outside the temporary folders purged at startup. Delete entries and collections through the photo service so their files are removed too.
 - Never automatically delete, overwrite, or recreate an existing database file because its key is missing or wrong. Follow confirmed decision O-019: quarantine the file and its sidecars, then offer "Restore from a Memento backup" or "Start fresh" (SDD §8.1.1).
 - The encrypted database foundation (SQLCipher, fail-closed `cipher_version` check, key storage, O-019 recovery, O-018 exclusion) is built in Phase 1, not deferred to Phase 5 (O-036). Before any build stores real data, verify it on a physical Android device (G-003 gates in `docs/PHASE_0_REPORT.md` §7).
 - Key the database with a random 256-bit raw key stored in SecureStore with `AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY` (O-019).

@@ -5,14 +5,21 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { startDatabase } from '@/database/bootstrap/start-database';
 import type { ClosableSqlDatabase } from '@/database/connection/sql-database';
 import { AppearanceProvider, useAppearance } from '@/design-system/appearance-provider';
+import {
+  CatalogServicesProvider,
+  createCatalogServices,
+} from '@/features/catalog/catalog-services';
 import { createDeviceCheckEnv } from '@/features/device-checks/device-check-env';
 import { DeviceChecksScreen } from '@/features/device-checks/device-checks-screen';
+import { CurrencySettingProvider } from '@/features/settings/currency-setting';
 import { SettingController } from '@/features/settings/setting-controller';
 import { DatabaseGate } from '@/features/startup/database-gate';
 import { StartupLoadingScreen } from '@/features/startup/startup-screens';
 import { createI18n } from '@/localization/i18n';
 import { LocalizationProvider, useTranslation } from '@/localization/localization-provider';
 import { SqliteSettingsRepository } from '@/repositories/sqlite-settings-repository';
+import { randomUUID } from '@/services/ids/random-uuid';
+import { createDeviceMediaPorts } from '@/services/media/device-media';
 
 /**
  * Developer-only on-device checks (O-017): a development build started with
@@ -32,7 +39,13 @@ function createAppServices(db: ClosableSqlDatabase) {
   return {
     appearance: new SettingController('appearance', settings),
     language: new SettingController('language', settings),
+    currency: new SettingController('defaultCurrency', settings),
     i18n: createI18n(),
+    catalog: createCatalogServices(
+      db,
+      { now: () => new Date().toISOString(), newId: randomUUID },
+      createDeviceMediaPorts(),
+    ),
   };
 }
 
@@ -43,9 +56,13 @@ function App({ db }: { db: ClosableSqlDatabase }) {
   useEffect(() => {
     let current = true;
     // Load saved preferences before the first app frame, so the theme does not flash.
-    Promise.all([services.appearance.load(), services.language.load()]).finally(
-      () => current && setSettingsLoaded(true),
-    );
+    Promise.all([
+      services.appearance.load(),
+      services.language.load(),
+      services.currency.load(),
+      // Plaintext left by an interrupted photo intake is removed at every start (SDD §9).
+      services.catalog.photos.purgeTemporary(),
+    ]).finally(() => current && setSettingsLoaded(true));
     return () => {
       current = false;
     };
@@ -56,9 +73,13 @@ function App({ db }: { db: ClosableSqlDatabase }) {
   return (
     <LocalizationProvider store={services.language} i18nInstance={services.i18n}>
       <AppearanceProvider controller={services.appearance}>
-        <NavigationTheme>
-          <RootStack />
-        </NavigationTheme>
+        <CurrencySettingProvider controller={services.currency}>
+          <CatalogServicesProvider services={services.catalog}>
+            <NavigationTheme>
+              <RootStack />
+            </NavigationTheme>
+          </CatalogServicesProvider>
+        </CurrencySettingProvider>
       </AppearanceProvider>
     </LocalizationProvider>
   );
@@ -71,6 +92,8 @@ function RootStack() {
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="capture" options={{ presentation: 'modal', title: t('capture.title') }} />
+      <Stack.Screen name="catalog/index" options={{ title: t('catalog.title') }} />
+      <Stack.Screen name="inbox" options={{ title: t('inbox.title') }} />
     </Stack>
   );
 }

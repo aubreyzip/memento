@@ -49,24 +49,25 @@ describe('navigation shell (B-008)', () => {
     expect(screen.getByLabelText(label)).toBeSelected();
   });
 
-  it('Settings contains the appearance and language settings', async () => {
+  it('Settings contains the appearance, language, and currency settings', async () => {
     await renderApp('/settings');
 
     expect(screen.getByLabelText('Appearance')).toBeOnTheScreen();
     expect(screen.getByLabelText('Language')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Default currency')).toBeOnTheScreen();
   });
 
   it.each(['/', '/collections', '/search', '/settings'])(
-    'Quick Add on %s opens the capture modal, and Close returns',
+    'Quick Add on %s opens the capture modal, and Cancel returns',
     async (path) => {
       await renderApp(path);
 
       await fireEvent.press(screen.getByRole('button', { name: 'Quick Add' }));
       expect(screen).toHavePathname('/capture');
       // The native stack renders the modal title natively, so it is not text in tests.
-      expect(screen.getByRole('button', { name: 'Close' })).toBeOnTheScreen();
+      expect(await screen.findByLabelText('Title')).toBeOnTheScreen();
 
-      await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
+      await fireEvent.press(screen.getByRole('button', { name: 'Cancel' }));
       expect(screen).toHavePathname(path);
     },
   );

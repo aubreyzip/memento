@@ -5,9 +5,10 @@ import { useThemeColors } from '@/design-system/use-theme-colors';
 import { useTranslation } from '@/localization/localization-provider';
 
 import { AppearancePicker } from './appearance-picker';
+import { CurrencyPicker } from './currency-picker';
 import { LanguagePicker } from './language-picker';
 
-/** Settings area. Phase 1 has appearance and language; later phases add their own sections. */
+/** Settings area: appearance, language, default currency; later phases add their own sections. */
 export function SettingsScreen() {
   const c = useThemeColors();
   const { t } = useTranslation();
@@ -25,6 +26,13 @@ export function SettingsScreen() {
           {t('settings.language.label')}
         </Text>
         <LanguagePicker />
+      </View>
+      <View style={styles.section}>
+        <Text accessibilityRole="header" style={[styles.heading, { color: c.textPrimary }]}>
+          {t('settings.currency.label')}
+        </Text>
+        <Text style={{ color: c.textSecondary }}>{t('settings.currency.hint')}</Text>
+        <CurrencyPicker />
       </View>
     </ScrollView>
   );

@@ -6,6 +6,7 @@ import { randomBytes } from 'node:crypto';
 import type { DatabaseFiles } from '@/database/bootstrap/ports';
 import type { ClosableSqlDatabase } from '@/database/connection/sql-database';
 import { openNodeSqlDatabase } from '@/database/testing/node-sql-database';
+import { nodeAesGcm } from '@/features/photos/testing/node-aes-gcm';
 
 import {
   PLAINTEXT_MARKER,
@@ -115,6 +116,7 @@ function plainSqliteEnv(dir: string, options: { reportsCipher: boolean }) {
     },
     randomBytes: (n) => Uint8Array.from(randomBytes(n)),
     now: () => new Date('2026-11-09T10:00:00.000Z'),
+    aesGcm: nodeAesGcm,
   };
   return { env, open, removals, storedKey: () => storedKey };
 }
@@ -165,6 +167,10 @@ describe('runDeviceChecks', () => {
       'inbox-rule-enforced',
       'settings-saved',
       'state-b-reopen',
+      // G8 runs on any working AES-GCM; here Node's OpenSSL.
+      'media-aes-gcm-vector',
+      'media-aes-gcm-round-trip',
+      'media-aes-gcm-tamper',
     ]) {
       expect([id, ok[id]]).toEqual([id, true]);
     }

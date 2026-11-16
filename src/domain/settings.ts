@@ -16,10 +16,19 @@ export const FALLBACK_LANGUAGE: SupportedLanguage = 'en';
 export const LANGUAGE_PREFERENCES = ['system', ...SUPPORTED_LANGUAGES] as const;
 export type LanguagePreference = (typeof LANGUAGE_PREFERENCES)[number];
 
+/**
+ * Default currency for new prices (O-010): an ISO 4217 code, or '' to follow the device region.
+ * Common codes offered first in Settings are a config list (O-056); any code can be typed.
+ */
+export const DEVICE_CURRENCY = '';
+export const COMMON_CURRENCIES = ['TRY', 'EUR', 'USD', 'GBP'] as const;
+export type CurrencyPreference = string;
+
 /** Typed map of every setting key to its value type. */
 export type SettingValues = {
   appearance: AppearancePreference;
   language: LanguagePreference;
+  defaultCurrency: CurrencyPreference;
 };
 export type SettingKey = keyof SettingValues;
 
@@ -27,6 +36,7 @@ export type SettingKey = keyof SettingValues;
 export const SETTING_DEFAULTS: SettingValues = {
   appearance: 'system',
   language: 'system',
+  defaultCurrency: DEVICE_CURRENCY,
 };
 
 function isOneOf<T extends string>(options: readonly T[]) {
@@ -37,6 +47,8 @@ function isOneOf<T extends string>(options: readonly T[]) {
 export const isAppearancePreference = isOneOf(APPEARANCE_PREFERENCES);
 export const isLanguagePreference = isOneOf(LANGUAGE_PREFERENCES);
 export const isSupportedLanguage = isOneOf(SUPPORTED_LANGUAGES);
+export const isCurrencyPreference = (value: unknown): value is CurrencyPreference =>
+  typeof value === 'string' && (value === DEVICE_CURRENCY || /^[A-Z]{3}$/.test(value));
 
 /** Validators for values read back from storage; unknown or corrupt values fall back to defaults. */
 export const SETTING_VALIDATORS: {
@@ -44,4 +56,5 @@ export const SETTING_VALIDATORS: {
 } = {
   appearance: isAppearancePreference,
   language: isLanguagePreference,
+  defaultCurrency: isCurrencyPreference,
 };

@@ -27,3 +27,10 @@ export function builtInId(table: number, sequence: number): string {
 export function isBuiltInId(id: string): boolean {
   return BUILT_IN_ID_PATTERN.test(id);
 }
+
+const V4_UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+/** User-created rows use random lowercase v4 UUIDs, which never fall in the built-in namespace. */
+export function isUserId(id: string): boolean {
+  return V4_UUID_PATTERN.test(id);
+}

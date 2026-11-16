@@ -12,7 +12,7 @@ function leafKeys(node: object, prefix = ''): string[] {
  * Turkish strings that are knowingly missing and fall back to English. Adding an English key
  * without a Turkish translation fails this test until the key is translated or listed here.
  */
-const KNOWN_MISSING_TURKISH = ['app.tagline'];
+const KNOWN_MISSING_TURKISH: string[] = [];
 
 describe('translations', () => {
   const i18n = createI18n();
@@ -23,7 +23,14 @@ describe('translations', () => {
   });
 
   it('falls back to English for a missing Turkish string (O-034, T-033)', () => {
-    expect(translatorFor(i18n, 'tr')('app.tagline')).toBe(en.app.tagline);
+    const instance = createI18n();
+    instance.removeResourceBundle('tr', 'translation');
+    instance.addResourceBundle('tr', 'translation', { app: {} });
+    expect(translatorFor(instance, 'tr')('app.tagline')).toBe(en.app.tagline);
+  });
+
+  it('has the Turkish tagline (O-045)', () => {
+    expect(translatorFor(i18n, 'tr')('app.tagline')).toBe('Küçük şeyleri hatırla.');
   });
 
   it('switching language does not change other translators (immediate, isolated)', () => {

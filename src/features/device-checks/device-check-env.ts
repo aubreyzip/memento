@@ -7,6 +7,7 @@ import {
   databaseDirectoryFile,
   databaseDirectoryUri,
 } from '@/services/files/expo-database-files';
+import { expoAesGcm } from '@/services/media/expo-aes-gcm';
 import { createSecureStoreKeyStore } from '@/services/security/secure-store-key-store';
 
 import type { DeviceCheckEnv } from './run-device-checks';
@@ -15,7 +16,7 @@ import type { DeviceCheckEnv } from './run-device-checks';
 export const CHECK_DATABASE_NAME = 'memento-device-check.db';
 export const CHECK_KEY_NAME = 'memento.device-check-key.v1';
 
-/** Device wiring for the on-device checks: real expo-sqlite (SQLCipher), SecureStore, files. */
+/** Device wiring for the on-device checks: expo-sqlite (SQLCipher), SecureStore, files, AES-GCM. */
 export function createDeviceCheckEnv(): DeviceCheckEnv {
   return {
     databaseName: CHECK_DATABASE_NAME,
@@ -39,5 +40,6 @@ export function createDeviceCheckEnv(): DeviceCheckEnv {
     },
     randomBytes: getRandomBytes,
     now: () => new Date(),
+    aesGcm: expoAesGcm,
   };
 }

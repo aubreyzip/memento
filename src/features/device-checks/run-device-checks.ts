@@ -12,10 +12,13 @@ import type {
 import type { ClosableSqlDatabase } from '@/database/connection/sql-database';
 import { MIGRATIONS } from '@/database/migrations';
 import { BUILT_IN_CATEGORIES, BUILT_IN_COLLECTION_TYPES } from '@/domain/catalog';
+import type { AesGcm } from '@/features/photos/media-cipher';
 import { SqliteSettingsRepository } from '@/repositories/sqlite-settings-repository';
 
+import { runMediaChecks } from './media-checks';
+
 /**
- * On-device integration checks (O-017 part 3; gates G1–G4 in PHASE_0_REPORT §7).
+ * On-device integration checks (O-017 part 3; gates G1–G4 and G8 in PHASE_0_REPORT §7).
  *
  * They drive the real startup state machine, SQLCipher, SecureStore, and file system against a
  * check-only database file and key entry, never the app's own `memento.db` or key. All data is
@@ -39,6 +42,8 @@ export type DeviceCheckEnv = {
   removeCheckFiles(): Promise<void>;
   randomBytes: (count: number) => Uint8Array;
   now: () => Date;
+  /** The AES-GCM implementation photos use (G8). */
+  aesGcm: AesGcm;
 };
 
 /** Synthetic text whose absence from the raw file shows the contents are encrypted. */
@@ -428,6 +433,9 @@ export async function runDeviceChecks(env: DeviceCheckEnv): Promise<DeviceCheckR
       }
       return `quarantined: ${result.quarantined.join(', ')}; WAL-only change recoverable with the original key`;
     });
+
+    // --- G8: photo encryption (O-008). ---
+    await runMediaChecks(check, env.aesGcm, env.randomBytes);
 
     return results;
   } catch (error) {
