@@ -5,6 +5,10 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { startDatabase } from '@/database/bootstrap/start-database';
 import type { ClosableSqlDatabase } from '@/database/connection/sql-database';
 import { AppearanceProvider, useAppearance } from '@/design-system/appearance-provider';
+import {
+  CatalogServicesProvider,
+  createCatalogServices,
+} from '@/features/catalog/catalog-services';
 import { createDeviceCheckEnv } from '@/features/device-checks/device-check-env';
 import { DeviceChecksScreen } from '@/features/device-checks/device-checks-screen';
 import { SettingController } from '@/features/settings/setting-controller';
@@ -13,6 +17,7 @@ import { StartupLoadingScreen } from '@/features/startup/startup-screens';
 import { createI18n } from '@/localization/i18n';
 import { LocalizationProvider, useTranslation } from '@/localization/localization-provider';
 import { SqliteSettingsRepository } from '@/repositories/sqlite-settings-repository';
+import { randomUUID } from '@/services/ids/random-uuid';
 
 /**
  * Developer-only on-device checks (O-017): a development build started with
@@ -33,6 +38,10 @@ function createAppServices(db: ClosableSqlDatabase) {
     appearance: new SettingController('appearance', settings),
     language: new SettingController('language', settings),
     i18n: createI18n(),
+    catalog: createCatalogServices(db, {
+      now: () => new Date().toISOString(),
+      newId: randomUUID,
+    }),
   };
 }
 
@@ -56,9 +65,11 @@ function App({ db }: { db: ClosableSqlDatabase }) {
   return (
     <LocalizationProvider store={services.language} i18nInstance={services.i18n}>
       <AppearanceProvider controller={services.appearance}>
-        <NavigationTheme>
-          <RootStack />
-        </NavigationTheme>
+        <CatalogServicesProvider services={services.catalog}>
+          <NavigationTheme>
+            <RootStack />
+          </NavigationTheme>
+        </CatalogServicesProvider>
       </AppearanceProvider>
     </LocalizationProvider>
   );
@@ -71,6 +82,7 @@ function RootStack() {
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="capture" options={{ presentation: 'modal', title: t('capture.title') }} />
+      <Stack.Screen name="catalog/index" options={{ title: t('catalog.title') }} />
     </Stack>
   );
 }

@@ -77,6 +77,18 @@ const dark: SemanticColors = {
 
 export const colors: Record<ColorSchemeName, SemanticColors> = { light, dark };
 
+/**
+ * Colors offered for collection, type, and category accents (FR-012, FR-013, FR-021). Accents are
+ * decorative (O-042): they are drawn as a swatch next to the name, never as the only cue. Cream is
+ * left out because it is the light background.
+ */
+export const ACCENT_CHOICES: readonly string[] = [
+  palette.burgundy,
+  palette.coral,
+  palette.softCoral,
+  palette.peach,
+];
+
 /** Spacing scale in density-independent pixels. */
 export const spacing = {
   xs: 4,
