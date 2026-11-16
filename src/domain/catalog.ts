@@ -1,5 +1,6 @@
 import { DomainError } from './errors';
 import { BUILT_IN_TABLE, builtInId } from './ids';
+import { codePoints, LIMITS } from './limits';
 
 /** Category templates (B-005). They decide applicable fields and status behavior. */
 export const TEMPLATE_KEYS = ['NOTE', 'TASK', 'WISHLIST', 'EVENT', 'PREFERENCE'] as const;
@@ -51,17 +52,17 @@ export type Collection = {
   archivedAt: string | null;
 };
 
-/** Field limits (O-027). Lengths count Unicode code points, not UTF-16 units. */
-export const NAME_MAX_LENGTH = 60;
-export const DESCRIPTION_MAX_LENGTH = 10_000;
+/** Field limits (O-027), from the central table (O-056). */
+export const NAME_MAX_LENGTH = LIMITS.name;
+export const DESCRIPTION_MAX_LENGTH = LIMITS.description;
 
-const codePoints = (text: string) => [...text].length;
-
-/** Trims a collection, type, or category name and checks it is non-empty and within 60. */
+/** Trims a collection, type, or category name and checks it is non-empty and within the limit. */
 export function validateName(input: string): string {
   const name = input.trim();
   if (name.length === 0) throw new DomainError('name-required');
-  if (codePoints(name) > NAME_MAX_LENGTH) throw new DomainError('name-too-long');
+  if (codePoints(name) > NAME_MAX_LENGTH) {
+    throw new DomainError('name-too-long', { max: NAME_MAX_LENGTH });
+  }
   return name;
 }
 
@@ -70,7 +71,7 @@ export function validateDescription(input: string | null | undefined): string | 
   const description = input?.trim() ?? '';
   if (description.length === 0) return null;
   if (codePoints(description) > DESCRIPTION_MAX_LENGTH) {
-    throw new DomainError('description-too-long');
+    throw new DomainError('description-too-long', { max: DESCRIPTION_MAX_LENGTH });
   }
   return description;
 }

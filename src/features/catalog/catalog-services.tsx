@@ -12,13 +12,15 @@ import {
   SqliteCollectionRepository,
   type CollectionRepository,
 } from '@/repositories/collection-repository';
+import { SqliteEntryRepository, type EntryRepository } from '@/repositories/entry-repository';
 import type { RepositoryDeps } from '@/repositories/repository-deps';
 
-/** The repositories the collection and catalog screens use. Screens never see SQL. */
+/** The repositories the collection, catalog, and entry screens use. Screens never see SQL. */
 export type CatalogServices = {
   collectionTypes: CollectionTypeRepository;
   categories: CategoryRepository;
   collections: CollectionRepository;
+  entries: EntryRepository;
 };
 
 export function createCatalogServices(db: SqlDatabase, deps: RepositoryDeps): CatalogServices {
@@ -26,6 +28,7 @@ export function createCatalogServices(db: SqlDatabase, deps: RepositoryDeps): Ca
     collectionTypes: new SqliteCollectionTypeRepository(db, deps),
     categories: new SqliteCategoryRepository(db, deps),
     collections: new SqliteCollectionRepository(db, deps),
+    entries: new SqliteEntryRepository(db, deps),
   };
 }
 

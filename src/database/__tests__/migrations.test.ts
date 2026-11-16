@@ -1,3 +1,5 @@
+import { BUILT_IN_CATEGORIES, BUILT_IN_COLLECTION_TYPES } from '@/domain/catalog';
+
 import { initializeSchema } from '../initialize-schema';
 import { MIGRATIONS } from '../migrations';
 import type { Migration } from '../migrations/migration';
@@ -105,6 +107,82 @@ describe('migration 0002 catalog lifecycle (O-025)', () => {
                 (SELECT count(*) FROM collections) AS collections`,
       );
       expect(counts).toEqual({ types: 6, categories: 7, collections: 1 });
+    } finally {
+      db.close();
+    }
+  });
+});
+
+describe('migration 0003 entry fields (O-021 to O-026)', () => {
+  const now = '2026-11-16T10:00:00.000Z';
+  const collection = '6f1c1d36-5b0e-4a51-9a4e-0d6c2f6b1a03';
+  const entry = '6f1c1d36-5b0e-4a51-9a4e-0d6c2f6b1a04';
+  const generalType = BUILT_IN_COLLECTION_TYPES[4].id;
+  const notes = BUILT_IN_CATEGORIES[6].id;
+
+  it('upgrades a version 2 database and keeps its entries', async () => {
+    const db = openNodeSqlDatabase();
+    try {
+      await initializeSchema(db, { migrations: MIGRATIONS.slice(0, 2) });
+      await db.run(
+        `INSERT INTO collections (id, collection_type_id, name, created_at, updated_at)
+         VALUES (?, ?, 'Synthetic collection', ?, ?)`,
+        [collection, generalType, now, now],
+      );
+      await db.run(
+        `INSERT INTO entries (id, collection_id, category_id, title, created_at, updated_at)
+         VALUES (?, ?, ?, 'Synthetic entry', ?, ?)`,
+        [entry, collection, notes, now, now],
+      );
+
+      await expect(initializeSchema(db)).resolves.toEqual({ from: 2, to: LATEST });
+
+      const row = await db.get(
+        'SELECT title, status, date_recurrence, price_minor, search_text FROM entries WHERE id = ?',
+        [entry],
+      );
+      expect(row).toEqual({
+        title: 'Synthetic entry',
+        status: null,
+        date_recurrence: 'NONE',
+        price_minor: null,
+        search_text: '',
+      });
+    } finally {
+      db.close();
+    }
+  });
+
+  it('enforces the structural checks', async () => {
+    const db = openNodeSqlDatabase();
+    try {
+      await initializeSchema(db);
+      await db.run(
+        `INSERT INTO collections (id, collection_type_id, name, created_at, updated_at)
+         VALUES (?, ?, 'Synthetic collection', ?, ?)`,
+        [collection, generalType, now, now],
+      );
+      const insert = (columns: string, values: (string | number)[]) =>
+        db.run(
+          `INSERT INTO entries (id, title, created_at, updated_at, ${columns})
+           VALUES ('${entry}', 'X', '${now}', '${now}', ${values.map(() => '?').join(', ')})`,
+          values,
+        );
+
+      await expect(insert('price_minor', [100])).rejects.toThrow(/CHECK/);
+      await expect(insert('price_minor, currency_code', [-1, 'EUR'])).rejects.toThrow(/CHECK/);
+      await expect(insert('price_minor, currency_code', [1.5, 'EUR'])).rejects.toThrow(/CHECK/);
+      await expect(insert('price_minor, currency_code', [100, 'eur'])).rejects.toThrow(/CHECK/);
+      await expect(insert('date_start', ['16.11.2026'])).rejects.toThrow(/CHECK/);
+      await expect(insert('date_start, date_end', ['2026-11-16', '2026-11-15'])).rejects.toThrow(
+        /CHECK/,
+      );
+      await insert('price_minor, currency_code, date_start, date_end', [
+        100,
+        'EUR',
+        '2026-11-16',
+        '2026-11-17',
+      ]);
     } finally {
       db.close();
     }

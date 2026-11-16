@@ -3,35 +3,41 @@ import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import type { Entry } from '@/domain/entries';
 import { Icon } from '@/design-system/icons';
 import { spacing } from '@/design-system/tokens';
 import { useThemeColors } from '@/design-system/use-theme-colors';
-import { collectionTypeName } from '@/localization/catalog-names';
+import { entryBadges } from '@/features/entries/entry-display';
+import { categoryName, collectionTypeName } from '@/localization/catalog-names';
 import { useTranslation } from '@/localization/localization-provider';
 
-import { collectionAccent, collectionIcon } from './catalog-display';
+import { categoryIcon, collectionAccent, collectionIcon } from './catalog-display';
 import { useCatalogData, useCatalogServices } from './catalog-services';
 import { errorMessage } from './error-message';
+import { ListRow } from './list-row';
 
-/**
- * One collection: its details and actions (FR-010, FR-016). Entries are listed here once the
- * entry slice lands.
- */
+/** One collection: its details, actions, and entries (FR-010, FR-016, FR-040). */
 export function CollectionDetailScreen({ id }: { id: string }) {
   const c = useThemeColors();
   const { t } = useTranslation();
   const { collections } = useCatalogServices();
   const [actionError, setActionError] = useState<string | null>(null);
-  const { data, reload } = useCatalogData(async ({ collections, collectionTypes }) => {
-    const collection = await collections.get(id);
-    return {
-      collection,
-      type: collection && (await collectionTypes.get(collection.typeId)),
-    };
-  });
+  const [showArchived, setShowArchived] = useState(false);
+  const { data, reload } = useCatalogData(
+    async ({ collections, collectionTypes, entries, categories }) => {
+      const collection = await collections.get(id);
+      return {
+        collection,
+        type: collection && (await collectionTypes.get(collection.typeId)),
+        entries: await entries.listInCollection(id, { archived: false }),
+        archivedEntries: await entries.listInCollection(id, { archived: true }),
+        categories: new Map((await categories.listAll()).map((cat) => [cat.id, cat])),
+      };
+    },
+  );
 
   if (!data) return <View style={[styles.fill, { backgroundColor: c.background }]} />;
-  const { collection, type } = data;
+  const { collection, type, categories } = data;
   if (!collection) {
     return (
       <View style={[styles.fill, { backgroundColor: c.background }]}>
@@ -76,6 +82,21 @@ export function CollectionDetailScreen({ id }: { id: string }) {
       );
     });
 
+  const entryRow = (entry: Entry) => {
+    const category =
+      entry.placement.kind === 'assigned' ? categories.get(entry.placement.categoryId) : undefined;
+    return (
+      <ListRow
+        key={entry.id}
+        icon={category ? categoryIcon(category) : 'document-text-outline'}
+        title={entry.title}
+        subtitle={category ? categoryName(category, t) : undefined}
+        badges={entryBadges(entry, t)}
+        onPress={() => router.push(`/entry/${entry.id}`)}
+      />
+    );
+  };
+
   const accent = collectionAccent(collection, type);
   return (
     <ScrollView style={{ backgroundColor: c.background }} contentContainerStyle={styles.content}>
@@ -106,10 +127,6 @@ export function CollectionDetailScreen({ id }: { id: string }) {
         <Text style={[styles.description, { color: c.textPrimary }]}>{collection.description}</Text>
       ) : null}
 
-      <Text style={[styles.placeholder, { color: c.textSecondary }]}>
-        {t('collections.detail.entriesPlaceholder')}
-      </Text>
-
       {actionError ? (
         <Text accessibilityLiveRegion="polite" style={[styles.error, { color: c.primary }]}>
           {actionError}
@@ -128,6 +145,36 @@ export function CollectionDetailScreen({ id }: { id: string }) {
         />
         <Button icon="trash-outline" label={t('common.delete')} onPress={confirmDelete} />
       </View>
+
+      <Text accessibilityRole="header" style={[styles.heading, { color: c.textPrimary }]}>
+        {t('entries.heading')}
+      </Text>
+      {collection.archivedAt ? null : (
+        <Button
+          variant="filled"
+          icon="add"
+          label={t('entries.new')}
+          onPress={() =>
+            router.push({ pathname: '/entry/new', params: { collectionId: collection.id } })
+          }
+        />
+      )}
+      {data.entries.length === 0 ? (
+        <Text style={[styles.empty, { color: c.textSecondary }]}>{t('entries.empty')}</Text>
+      ) : (
+        <View style={styles.list}>{data.entries.map(entryRow)}</View>
+      )}
+      <Button
+        label={showArchived ? t('entries.hideArchived') : t('entries.showArchived')}
+        icon={showArchived ? 'chevron-up' : 'chevron-down'}
+        onPress={() => setShowArchived((shown) => !shown)}
+      />
+      {showArchived &&
+        (data.archivedEntries.length === 0 ? (
+          <Text style={[styles.empty, { color: c.textSecondary }]}>{t('entries.noArchived')}</Text>
+        ) : (
+          <View style={styles.list}>{data.archivedEntries.map(entryRow)}</View>
+        ))}
     </ScrollView>
   );
 }
@@ -171,11 +218,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 22,
   },
-  placeholder: {
+  heading: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginTop: spacing.md,
+  },
+  empty: {
     fontSize: 15,
-    fontStyle: 'italic',
-    marginVertical: spacing.lg,
     textAlign: 'center',
+    marginVertical: spacing.md,
+  },
+  list: {
+    gap: spacing.sm,
   },
   message: {
     padding: spacing.lg,
