@@ -14,6 +14,15 @@ export type DomainErrorCode =
   /** A status that the entry's template does not offer (O-021). */
   | 'invalid-status'
   | 'invalid-priority'
+  /** Not a calendar date, or a time without a date. */
+  | 'invalid-date'
+  /** An end before its start, or an end without a start. */
+  | 'invalid-date-range'
+  /** Repeating needs a date, and applies to all-day dates only (O-024). */
+  | 'invalid-recurrence'
+  | 'invalid-price'
+  | 'invalid-currency'
+  | 'location-too-long'
   | 'not-found'
   /** Built-in rows cannot be renamed or deleted (O-041, FR-025). */
   | 'built-in'

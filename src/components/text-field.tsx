@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { spacing } from '@/design-system/tokens';
 import { useThemeColors } from '@/design-system/use-theme-colors';
@@ -11,6 +11,8 @@ export function TextField({
   error,
   multiline = false,
   maxLength,
+  keyboardType,
+  autoCapitalize,
 }: {
   label: string;
   value: string;
@@ -18,6 +20,8 @@ export function TextField({
   error?: string | null;
   multiline?: boolean;
   maxLength?: number;
+  keyboardType?: TextInputProps['keyboardType'];
+  autoCapitalize?: TextInputProps['autoCapitalize'];
 }) {
   const c = useThemeColors();
 
@@ -31,6 +35,8 @@ export function TextField({
         onChangeText={onChangeText}
         multiline={multiline}
         maxLength={maxLength}
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize}
         placeholderTextColor={c.textSecondary}
         style={[
           styles.input,

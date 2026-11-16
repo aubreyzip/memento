@@ -202,6 +202,85 @@ describe('entries (FR-040 to FR-047, O-021 to O-025)', () => {
     await rejectsWith(entries.delete(entry.id), 'not-found');
   });
 
+  it('stores dates, repeat, price, and location, and keeps them across unrelated edits', async () => {
+    const entry = await entries.create({
+      placement: assignedTo(home, EVENTS),
+      title: 'Synthetic concert',
+      dateStart: '2026-12-01',
+      dateEnd: '2026-12-02',
+      startsAtUtc: '2026-12-01T18:00:00.000Z',
+      endsAtUtc: '2026-12-01T21:00:00.000Z',
+      priceMinor: 4500,
+      currencyCode: 'eur',
+      locationText: '  Synthetic hall  ',
+    });
+    expect(entry).toMatchObject({
+      dateStart: '2026-12-01',
+      dateEnd: '2026-12-02',
+      startsAtUtc: '2026-12-01T18:00:00.000Z',
+      endsAtUtc: '2026-12-01T21:00:00.000Z',
+      recurrence: 'NONE',
+      priceMinor: 4500,
+      currencyCode: 'EUR',
+      locationText: 'Synthetic hall',
+    });
+
+    const edited = await entries.update(entry.id, { title: 'Synthetic gig' });
+    expect(edited).toMatchObject({ dateEnd: '2026-12-02', priceMinor: 4500 });
+
+    const cleared = await entries.update(entry.id, {
+      dateEnd: null,
+      startsAtUtc: null,
+      endsAtUtc: null,
+      priceMinor: null,
+      currencyCode: null,
+      recurrence: 'YEARLY',
+    });
+    expect(cleared).toMatchObject({
+      dateStart: '2026-12-01',
+      dateEnd: null,
+      recurrence: 'YEARLY',
+      priceMinor: null,
+      currencyCode: null,
+    });
+  });
+
+  it('includes the location in the search text (O-026)', async () => {
+    const entry = await entries.create({
+      placement: assignedTo(home, EVENTS),
+      title: 'Party',
+      locationText: 'Kadıköy',
+    });
+    const row = await db.get<{ search_text: string }>(
+      'SELECT search_text FROM entries WHERE id = ?',
+      [entry.id],
+    );
+    expect(row?.search_text).toBe('party\nkadikoy');
+  });
+
+  it('rejects inconsistent dates and prices without changing the entry', async () => {
+    const entry = await entries.create({
+      placement: assignedTo(home, TASKS),
+      title: 'Task',
+      dateStart: '2026-12-01',
+    });
+
+    await rejectsWith(entries.update(entry.id, { dateEnd: '2026-11-30' }), 'invalid-date-range');
+    await rejectsWith(
+      entries.update(entry.id, {
+        recurrence: 'WEEKLY',
+        startsAtUtc: '2026-12-01T10:00:00.000Z',
+      }),
+      'invalid-recurrence',
+    );
+    await rejectsWith(entries.update(entry.id, { priceMinor: 100 }), 'invalid-currency');
+
+    expect(await entries.get(entry.id)).toMatchObject({
+      dateStart: '2026-12-01',
+      priceMinor: null,
+    });
+  });
+
   it('rejects an unknown category or collection', async () => {
     await rejectsWith(
       entries.create({ placement: assignedTo(home, randomUUID()), title: 'X' }),

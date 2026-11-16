@@ -5,7 +5,10 @@ import {
   isEntryStatus,
   isPriority,
   resolveStatus,
+  validateLocation,
+  validatePrice,
   validatePriority,
+  validateSchedule,
   validateTitle,
   type Entry,
 } from '@/domain/entries';
@@ -27,8 +30,97 @@ export type EntryInput = {
   /** Omit for the template's default (O-021). */
   status?: string | null;
   priority?: string | null;
+  dateStart?: string | null;
+  dateEnd?: string | null;
+  startsAtUtc?: string | null;
+  endsAtUtc?: string | null;
+  recurrence?: Recurrence;
+  priceMinor?: number | null;
+  currencyCode?: string | null;
+  locationText?: string | null;
 };
 export type EntryChanges = Partial<EntryInput>;
+
+/** Entry values stored as given (after validation), whatever the template. */
+type StoredFields = Pick<
+  Entry,
+  | 'title'
+  | 'description'
+  | 'priority'
+  | 'dateStart'
+  | 'dateEnd'
+  | 'startsAtUtc'
+  | 'endsAtUtc'
+  | 'recurrence'
+  | 'priceMinor'
+  | 'currencyCode'
+  | 'locationText'
+>;
+
+/** Column for each stored field, in one place so INSERT and UPDATE stay in step. */
+const FIELD_COLUMN: Record<keyof StoredFields, string> = {
+  title: 'title',
+  description: 'description',
+  priority: 'priority',
+  dateStart: 'date_start',
+  dateEnd: 'date_end',
+  startsAtUtc: 'starts_at_utc',
+  endsAtUtc: 'ends_at_utc',
+  recurrence: 'date_recurrence',
+  priceMinor: 'price_minor',
+  currencyCode: 'currency_code',
+  locationText: 'location_text',
+};
+const FIELD_KEYS = Object.keys(FIELD_COLUMN) as (keyof StoredFields)[];
+const FIELD_COLUMNS = FIELD_KEYS.map((key) => FIELD_COLUMN[key]);
+const fieldValues = (fields: StoredFields) => FIELD_KEYS.map((key) => fields[key]);
+const searchText = (fields: StoredFields) =>
+  entrySearchText([fields.title, fields.description, fields.locationText]);
+
+const NEW_ENTRY: Omit<StoredFields, 'title'> = {
+  description: null,
+  priority: null,
+  dateStart: null,
+  dateEnd: null,
+  startsAtUtc: null,
+  endsAtUtc: null,
+  recurrence: 'NONE',
+  priceMinor: null,
+  currencyCode: null,
+  locationText: null,
+};
+
+/** `change` when given (including null, which clears), else `current`. */
+const pick = <T>(change: T | undefined, current: T): T => (change === undefined ? current : change);
+
+/** Validates the given changes and merges them over `base` (O-024, O-010, O-011, O-027). */
+function storedFields(changes: EntryChanges, base: StoredFields): StoredFields {
+  const schedule = validateSchedule({
+    dateStart: pick(changes.dateStart, base.dateStart),
+    dateEnd: pick(changes.dateEnd, base.dateEnd),
+    startsAtUtc: pick(changes.startsAtUtc, base.startsAtUtc),
+    endsAtUtc: pick(changes.endsAtUtc, base.endsAtUtc),
+    recurrence: pick(changes.recurrence, base.recurrence),
+  });
+  const price = validatePrice({
+    priceMinor: pick(changes.priceMinor, base.priceMinor),
+    currencyCode: pick(changes.currencyCode, base.currencyCode),
+  });
+  return {
+    title: changes.title === undefined ? base.title : validateTitle(changes.title),
+    description:
+      changes.description === undefined
+        ? base.description
+        : validateDescription(changes.description),
+    priority: changes.priority === undefined ? base.priority : validatePriority(changes.priority),
+    locationText:
+      changes.locationText === undefined
+        ? base.locationText
+        : validateLocation(changes.locationText),
+    ...schedule,
+    ...price,
+  };
+}
 
 /**
  * Entries (FR-040 to FR-047, O-021 to O-025). Placement follows the Inbox rule (B-006); status
@@ -186,9 +278,7 @@ export class SqliteEntryRepository implements EntryRepository {
   }
 
   async create(input: EntryInput): Promise<Entry> {
-    const title = validateTitle(input.title);
-    const description = validateDescription(input.description);
-    const priority = validatePriority(input.priority);
+    const fields = storedFields(input, { ...NEW_ENTRY, title: '' });
     const id = newUserId(this.deps);
     const now = this.deps.now();
     const { collectionId, categoryId } = placementColumns(input.placement);
@@ -202,19 +292,17 @@ export class SqliteEntryRepository implements EntryRepository {
         now,
       );
       await this.db.run(
-        `INSERT INTO entries (id, collection_id, category_id, title, description, status,
-           priority, completed_at, search_text, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO entries (id, collection_id, category_id, status, completed_at,
+           ${FIELD_COLUMNS.join(', ')}, search_text, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ${FIELD_COLUMNS.map(() => '?').join(', ')}, ?, ?, ?)`,
         [
           id,
           collectionId,
           categoryId,
-          title,
-          description,
           status,
-          priority,
           completedAt,
-          entrySearchText([title, description]),
+          ...fieldValues(fields),
+          searchText(fields),
           now,
           now,
         ],
@@ -227,13 +315,7 @@ export class SqliteEntryRepository implements EntryRepository {
     const now = this.deps.now();
     await this.db.transaction(async () => {
       const current = await this.require(id);
-      const title = changes.title === undefined ? current.title : validateTitle(changes.title);
-      const description =
-        changes.description === undefined
-          ? current.description
-          : validateDescription(changes.description);
-      const priority =
-        changes.priority === undefined ? current.priority : validatePriority(changes.priority);
+      const fields = storedFields(changes, current);
       const placement = changes.placement ?? current.placement;
 
       const template = await this.checkPlacement(placement, current.placement);
@@ -248,18 +330,17 @@ export class SqliteEntryRepository implements EntryRepository {
       const { collectionId, categoryId } = placementColumns(placement);
 
       await this.db.run(
-        `UPDATE entries SET collection_id = ?, category_id = ?, title = ?, description = ?,
-           status = ?, priority = ?, completed_at = ?, search_text = ?, updated_at = ?
+        `UPDATE entries SET collection_id = ?, category_id = ?, status = ?, completed_at = ?,
+           ${FIELD_COLUMNS.map((column) => `${column} = ?`).join(', ')},
+           search_text = ?, updated_at = ?
          WHERE id = ?`,
         [
           collectionId,
           categoryId,
-          title,
-          description,
           status,
-          priority,
           completedAt,
-          entrySearchText([title, description, current.locationText]),
+          ...fieldValues(fields),
+          searchText(fields),
           now,
           id,
         ],

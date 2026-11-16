@@ -9,6 +9,8 @@ export const LIMITS = {
   title: 160,
   /** Descriptions of collections and entries. */
   description: 10_000,
+  /** User-entered location or address on an entry (O-011, O-027 amendment 16 Nov 2026). */
+  location: 500,
   tag: 40,
   linksPerEntry: 20,
   url: 2_048,

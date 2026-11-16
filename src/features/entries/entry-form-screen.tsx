@@ -16,7 +16,10 @@ import { useCatalogData, useCatalogServices } from '@/features/catalog/catalog-s
 import { errorMessage } from '@/features/catalog/error-message';
 import { categoryName } from '@/localization/catalog-names';
 import { useTranslation } from '@/localization/localization-provider';
+import { deviceCurrencyCode } from '@/services/locale/device-currency';
 
+import { decimalSeparator } from './entry-format';
+import { initialTemplateValues, toEntryFields } from './entry-form-values';
 import { TemplateFields, type TemplateValues } from './template-fields';
 
 /**
@@ -58,7 +61,7 @@ function EntryForm({
   categories: Category[];
 }) {
   const c = useThemeColors();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { entries } = useCatalogServices();
 
   const isInbox = entry?.placement.kind === 'inbox';
@@ -73,10 +76,12 @@ function EntryForm({
   const template = isInbox ? null : templateOf(categoryId);
   const [title, setTitle] = useState(entry?.title ?? '');
   const [description, setDescription] = useState(entry?.description ?? '');
-  const [values, setValues] = useState<TemplateValues>({
-    status: entry ? entry.status : resolveStatus(template, undefined),
-    priority: entry?.priority ?? null,
-  });
+  const [values, setValues] = useState<TemplateValues>(() =>
+    initialTemplateValues(entry, template, {
+      defaultCurrency: deviceCurrencyCode(),
+      decimalSeparator: decimalSeparator(language),
+    }),
+  );
   const [titleError, setTitleError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -106,15 +111,8 @@ function EntryForm({
             entry?.placement.kind === 'assigned' ? entry.placement.collectionId : collectionId!,
             categoryId,
           );
-    const input = {
-      placement,
-      title,
-      description,
-      // No status means "the template's rule decides" (O-021).
-      status: values.status ?? undefined,
-      priority: values.priority,
-    };
     try {
+      const input = { ...toEntryFields(values), placement, title, description };
       const saved = entry ? await entries.update(entry.id, input) : await entries.create(input);
       if (entry) router.back();
       else router.replace(`/entry/${saved.id}`);

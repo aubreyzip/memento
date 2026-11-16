@@ -2,6 +2,8 @@ import { router } from 'expo-router';
 import { act, fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
 import { Alert } from 'react-native';
 
+import { pickDateTime } from '@/services/pickers/pick-date-time';
+
 jest.mock('expo-localization', () => ({ getLocales: () => [{ languageCode: 'en' }] }));
 
 // The real layout runs the encrypted startup; tests use the fake device storage instead.
@@ -18,6 +20,14 @@ jest.mock('../../../database/bootstrap/start-database', () => {
 jest.mock('../../../services/ids/random-uuid', () => ({
   randomUUID: () => jest.requireActual('node:crypto').randomUUID(),
 }));
+
+// The Android dialog is native; tests choose the value it reports.
+jest.mock('../../../services/pickers/pick-date-time', () => ({ pickDateTime: jest.fn() }));
+
+/** Makes the next date or time dialog report `value`. */
+function nextPick(value: Date) {
+  jest.mocked(pickDateTime).mockImplementationOnce((_mode, _initial, onPicked) => onPicked(value));
+}
 
 /** Presses the button with `label` in the most recent Alert. */
 function confirmAlert(label: string) {
@@ -140,6 +150,73 @@ describe('entries (FR-040 to FR-047, O-021, O-022)', () => {
 
     confirmAlert('Delete');
     expect(await screen.findByText('No entries yet.')).toBeOnTheScreen();
+  });
+
+  it('sets a due date that repeats monthly (O-024)', async () => {
+    await openNewEntryForm();
+    await fireEvent.changeText(screen.getByLabelText('Title'), 'Synthetic rent');
+    await fireEvent.press(radio('Tasks & Repairs'));
+
+    nextPick(new Date(2099, 0, 31));
+    await fireEvent.press(screen.getByRole('button', { name: 'Due date, Not set' }));
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Monthly' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByText('Due date: Jan 31, 2099')).toBeOnTheScreen();
+    expect(screen.getByText('Repeats: Monthly')).toBeOnTheScreen();
+    expect(screen.getByText('Next: Jan 31, 2099')).toBeOnTheScreen();
+  });
+
+  it('saves an event with a date range, times, price, and location', async () => {
+    await openNewEntryForm();
+    await fireEvent.changeText(screen.getByLabelText('Title'), 'Synthetic festival');
+    await fireEvent.press(radio('Important Dates'));
+
+    nextPick(new Date(2099, 5, 10));
+    await fireEvent.press(screen.getByRole('button', { name: 'Date, Not set' }));
+    nextPick(new Date(2099, 5, 12));
+    await fireEvent.press(await screen.findByRole('button', { name: 'End date, Not set' }));
+    nextPick(new Date(2099, 5, 10, 10, 0));
+    await fireEvent.press(screen.getByRole('button', { name: 'Start time, Not set' }));
+    nextPick(new Date(2099, 5, 10, 12, 30));
+    await fireEvent.press(await screen.findByRole('button', { name: 'End time, Not set' }));
+    // Repeating applies to all-day dates only, so it is not offered with a time.
+    expect(screen.queryByRole('radiogroup', { name: 'Repeat' })).toBeNull();
+
+    await fireEvent.changeText(screen.getByLabelText('Price (optional)'), '1.250,50');
+    await fireEvent.changeText(screen.getByLabelText('Currency'), 'eur');
+    await fireEvent.changeText(screen.getByLabelText('Location (optional)'), 'Synthetic hall');
+    await fireEvent.press(screen.getByRole('button', { name: 'Save' }));
+
+    expect(
+      await screen.findByText(/^Date: Jun 10, 2099 – Jun 12, 2099, 10:00\sAM – 12:30\sPM$/),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('Price: €1,250.50')).toBeOnTheScreen();
+    expect(screen.getByText('Location: Synthetic hall')).toBeOnTheScreen();
+  });
+
+  it('clears a date together with its repeat', async () => {
+    await openNewEntryForm();
+    nextPick(new Date(2099, 2, 1));
+    await fireEvent.press(screen.getByRole('button', { name: 'Target date, Not set' }));
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Yearly' }));
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Clear Target date' }));
+
+    expect(screen.getByRole('button', { name: 'Target date, Not set' })).toBeOnTheScreen();
+    expect(screen.queryByRole('radiogroup', { name: 'Repeat' })).toBeNull();
+  });
+
+  it('explains a price that does not parse', async () => {
+    await openNewEntryForm();
+    await fireEvent.changeText(screen.getByLabelText('Title'), 'Synthetic lamp');
+    await fireEvent.changeText(screen.getByLabelText('Price (optional)'), 'twelve');
+    await fireEvent.changeText(screen.getByLabelText('Currency'), 'EUR');
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByText(/Enter a valid amount/)).toBeOnTheScreen();
+    expect(screen).toHavePathname('/entry/new');
   });
 
   it('offers no new entries in an archived collection (O-025)', async () => {

@@ -4,6 +4,7 @@ import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { OptionGroup } from '@/components/option-group';
+import { toIsoDate } from '@/domain/dates';
 import { templateRule } from '@/domain/entry-templates';
 import { Icon } from '@/design-system/icons';
 import { spacing } from '@/design-system/tokens';
@@ -14,7 +15,7 @@ import { errorMessage } from '@/features/catalog/error-message';
 import { categoryName } from '@/localization/catalog-names';
 import { useTranslation } from '@/localization/localization-provider';
 
-import { priorityLabel, statusLabel } from './entry-display';
+import { entryDetailLines, statusLabel } from './entry-display';
 
 /**
  * One entry: its details and actions (FR-040 to FR-047). The status can be changed in place
@@ -23,7 +24,7 @@ import { priorityLabel, statusLabel } from './entry-display';
  */
 export function EntryDetailScreen({ id }: { id: string }) {
   const c = useThemeColors();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { entries } = useCatalogServices();
   const [actionError, setActionError] = useState<string | null>(null);
   const { data, reload } = useCatalogData(async ({ entries, categories, collections }) => {
@@ -117,11 +118,17 @@ export function EntryDetailScreen({ id }: { id: string }) {
           onChange={(status) => change(() => entries.update(entry.id, { status }))}
         />
       ) : null}
-      {entry.priority ? (
-        <Text style={[styles.field, { color: c.textPrimary }]}>
-          {t('entries.detail.priority', { value: priorityLabel(entry.priority, t) })}
+      {entryDetailLines(
+        entry,
+        category?.templateKey ?? null,
+        t,
+        language,
+        toIsoDate(new Date()),
+      ).map((line) => (
+        <Text key={line} style={[styles.field, { color: c.textPrimary }]}>
+          {line}
         </Text>
-      ) : null}
+      ))}
       {entry.description ? (
         <Text style={[styles.description, { color: c.textPrimary }]}>{entry.description}</Text>
       ) : null}
